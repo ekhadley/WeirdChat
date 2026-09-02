@@ -1,0 +1,272 @@
+<title>lens viewer</title>
+<style>
+html, body { height: 100%; }
+body { background: #16161e; color: #d4d4dc; font-family: monospace; font-size: 14px; margin: 0; padding: 12px 18px; box-sizing: border-box; display: flex; flex-direction: row; gap: 20px; overflow: hidden; }
+#side { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+#side select, #side input { width: 100%; box-sizing: border-box; padding: 5px; }
+select { background: #1e1e28; color: #d4d4dc; border: 1px solid #3a3a4a; font-family: monospace; font-size: 13px; }
+#records { flex: 1; overflow-y: auto; border: 1px solid #3a3a4a; }
+.rec { padding: 4px 6px; cursor: pointer; border-bottom: 1px solid #22222e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.rec:hover { background: #22222e; }
+.rec.sel { background: #2a2a3a; }
+.rec .b { font-size: 10px; font-weight: bold; padding: 0 4px; margin-right: 3px; border-radius: 3px; }
+.b.on { background: #3c2a3a; color: #d3869b; } .b.off { background: #2a2a34; color: #888; }
+.b.match { background: #3d4220; color: #b8bb26; } .b.nomatch { background: #26262f; color: #666; }
+.rec .beh { color: #83a598; } .rec .prev { color: #888; }
+#right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+#toprow { display: flex; gap: 16px; flex: none; height: 28vh; }
+#inputcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+textarea { width: 100%; flex: 1; min-height: 90px; background: #1e1e28; color: #d4d4dc; border: 1px solid #3a3a4a; font-family: monospace; font-size: 13px; padding: 8px; box-sizing: border-box; resize: none; }
+button { background: #2a2a3a; color: #d4d4dc; border: 1px solid #4a4a5a; padding: 6px 18px; font-family: monospace; font-size: 14px; cursor: pointer; }
+input { background: #1e1e28; color: #d4d4dc; border: 1px solid #3a3a4a; font-family: monospace; }
+input[type=number] { width: 55px; }
+input[type=range] { width: 45%; min-width: 300px; vertical-align: middle; }
+#strip { flex: 1; min-width: 0; font-size: 17px; line-height: 1.5; overflow-y: auto; }
+.tok { display: inline-block; vertical-align: top; cursor: pointer; }
+.tok .txt { display: block; white-space: pre-wrap; padding: 2px 1px; }
+.tok.alt .txt { background: #2e2e3e; }
+.tok:not(.alt) .txt { background: #26262f; }
+.tok.sel .txt { background: #5a8232; color: #fff; }
+.bar { height: 4px; margin-top: 2px; }
+#tables { display: flex; gap: 28px; align-items: stretch; flex: 1; min-width: 0; min-height: 0; }
+#tables > div { flex: 1; min-width: 0; overflow-y: auto; }
+table { border-collapse: collapse; margin-top: 4px; width: 100%; table-layout: fixed; font-size: 13px; }
+th, td { border: 1px solid #3a3a4a; padding: 1px 8px; text-align: left; white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+tr.pinnable { cursor: pointer; }
+tr.pinnable:hover td { background: #2a2a3a; }
+tr.pinned td { border-top: 2px solid #4a4a5a; font-weight: bold; }
+#pinbox { width: 340px; flex-shrink: 0; background: #1c1c26; border: 1px solid #3a3a4a; padding: 12px; box-sizing: border-box; overflow-y: auto; }
+.pin { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.pin .plabel { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.swatch { width: 12px; height: 12px; flex-shrink: 0; }
+.rm { cursor: pointer; color: #888; padding: 0 4px; }
+.rm:hover { color: #ff5c5c; }
+#pinsearch { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 5px; }
+.cand { cursor: pointer; padding: 3px 6px; color: #aaa; }
+.cand:hover { background: #2a2a3a; color: #fff; }
+.kind { color: #777; }
+#tip { position: fixed; background: #26262f; border: 1px solid #4a4a5a; padding: 5px 10px; font-size: 13px; pointer-events: none; z-index: 10; white-space: pre; }
+</style>
+
+<div id="side">
+    <select id="run" onchange="selectRun()"></select>
+    <input id="recfilter" placeholder="filter records (behavior / text)" oninput="renderRecords()">
+    <div id="records"></div>
+</div>
+<div id="strip"></div>
+<div id="right">
+    <div id="toprow">
+        <div id="pinbox">
+            <b>pins</b> <span class="kind">(click a table row or search below)</span>
+            <div id="pinlist"></div>
+            <input id="pinsearch" placeholder="search templates / tokenize text" oninput="search()">
+            <div id="pincands"></div>
+        </div>
+        <div id="inputcol">
+            <textarea id="text" placeholder="raw prompt text (already templated); pick a record on the left to fill"></textarea>
+            <div>
+                <button onclick="run()">run</button>
+                k <input id="k" type="number" value="15">
+                <span id="status"></span>
+            </div>
+        </div>
+    </div>
+    <div id="layerbox" hidden>
+        layer <input id="layer" type="range" oninput="render()"> <b id="layerval"></b>
+    </div>
+    <div id="tables"></div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+let data = null, pos = 0, words = [], pinData = [], cands = [], recs = [], selRec = -1;
+const palette = ["#ff5c5c", "#4cc9f0", "#ffd166", "#9b5de5", "#06d6a0", "#f15bb5", "#fca311", "#8ac926"];
+const $ = id => document.getElementById(id);
+let pins = JSON.parse(localStorage.getItem("pins") || "[]");
+$("text").value = localStorage.getItem("text") || "";
+$("text").oninput = () => localStorage.setItem("text", $("text").value);
+fetch("/words").then(r => r.json()).then(w => { words = w; });
+renderPinList();
+
+function esc(s) { return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"); }
+function savePins() { localStorage.setItem("pins", JSON.stringify(pins)); }
+async function post(url, body) {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) {
+        $("status").textContent = `${url} failed: ${r.status}`;
+        throw new Error(await r.text());
+    }
+    return r.json();
+}
+
+// ---- run / record picker ----
+(async () => {
+    const runs = await (await fetch("/runs")).json();
+    $("run").innerHTML = runs.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
+    const saved = localStorage.getItem("run");
+    if (runs.includes(saved)) $("run").value = saved;
+    if (runs.length) selectRun();
+})();
+
+async function selectRun() {
+    const run = $("run").value;
+    localStorage.setItem("run", run);
+    selRec = -1;
+    recs = await (await fetch("/records/" + run)).json();
+    renderRecords();
+}
+
+function renderRecords() {
+    const q = $("recfilter").value.toLowerCase();
+    $("records").innerHTML = recs.map(r => q && !`${r.behavior} ${r.preview}`.toLowerCase().includes(q) ? "" :
+        `<div class="rec${r.i === selRec ? " sel" : ""}" onclick="selectRecord(${r.i})">` +
+        `<span class="b ${r.on ? "on" : "off"}">r=${r.on ? "on" : "off"}</span><span class="b ${r.match ? "match" : "nomatch"}">${r.match ? "MATCH" : "no"}</span>` +
+        `<span class="beh">${esc(r.behavior.split("-")[0])}</span> <span class="prev">${esc(r.preview)}</span></div>`).join("");
+}
+
+async function selectRecord(i) {
+    selRec = i;
+    renderRecords();
+    $("status").textContent = "templating...";
+    const res = await (await fetch(`/text/${$("run").value}/${i}`)).json();
+    $("text").value = res.text;
+    localStorage.setItem("text", res.text);
+    run();
+}
+
+// ---- lens ----
+async function run() {
+    $("status").textContent = "running...";
+    data = await post("/run", { text: $("text").value, k: +$("k").value });
+    $("status").textContent = `${data.toks.length} tokens`;
+    const slider = $("layer");
+    slider.min = data.layers[0];
+    slider.max = data.layers[data.layers.length - 1];
+    $("layerbox").hidden = false;
+    pos = data.toks.length - 1;
+    renderStrip();
+    await fetchPins();
+    render();
+}
+
+async function fetchPins() {
+    if (!pins.length || !data) { pinData = []; return; }
+    pinData = (await post("/pins", { pins: pins.map(p => ({ kind: p.kind, id: p.id })) })).pins;
+}
+
+function addPin(kind, id, label) {
+    pins.push({ kind, id, label, color: palette[pins.length % palette.length], on: true });
+    savePins();
+    renderPinList();
+    fetchPins().then(render);
+}
+function removePin(i) { pins.splice(i, 1); pinData.splice(i, 1); savePins(); renderPinList(); render(); }
+function togglePin(i, on) { pins[i].on = on; savePins(); render(); }
+
+function renderPinList() {
+    $("pinlist").innerHTML = pins.map((p, i) => `
+        <div class="pin">
+            <input type="checkbox" ${p.on ? "checked" : ""} onchange="togglePin(${i}, this.checked)">
+            <span class="swatch" style="background:${p.color}"></span>
+            <span class="plabel"><span class="kind">${p.kind}</span> ${esc(JSON.stringify(p.label))}</span>
+            <span class="rm" onclick="removePin(${i})">✕</span>
+        </div>`).join("");
+}
+
+async function search() {
+    const q = $("pinsearch").value;
+    if (!q) { cands = []; $("pincands").innerHTML = ""; return; }
+    const enc = await post("/encode", { text: q });
+    const tmpl = words.map((w, i) => [i, w]).filter(([i, w]) => w.toLowerCase().includes(q.toLowerCase())).slice(0, 15);
+    cands = enc.ids.map((id, j) => ({ kind: "tok", id, label: enc.toks[j] })).concat(tmpl.map(([i, w]) => ({ kind: "tmpl", id: i, label: w })));
+    $("pincands").innerHTML = cands.map((c, i) => `<div class="cand" onclick="addPin(cands[${i}].kind, cands[${i}].id, cands[${i}].label)"><span class="kind">${c.kind}</span> ${esc(JSON.stringify(c.label))}</div>`).join("");
+}
+
+function renderStrip() {
+    const strip = $("strip");
+    strip.innerHTML = "";
+    data.toks.forEach((tok, i) => {
+        const d = document.createElement("div");
+        d.className = "tok" + (i % 2 ? " alt" : "");
+        const txt = document.createElement("span");
+        txt.className = "txt";
+        txt.textContent = tok.replaceAll("\n", "⏎");
+        d.appendChild(txt);
+        d.onclick = () => { pos = i; render(); };
+        d.onmouseenter = () => showTip(i, d);
+        d.onmouseleave = () => $("tip").hidden = true;
+        strip.appendChild(d);
+        for (let j = 0; j < tok.split("\n").length - 1; j++) strip.appendChild(document.createElement("br"));
+    });
+}
+
+function showTip(i, d) {
+    const layer = +$("layer").value;
+    const lines = pins.map((p, j) => (p.on && pinData[j]) ? `<div style="color:${p.color}">${esc(JSON.stringify(p.label))}  ${pinData[j].val[layer][i]}  r${pinData[j].rank[layer][i]}</div>` : "").join("");
+    if (!lines) return;
+    const tip = $("tip");
+    tip.innerHTML = lines;
+    tip.hidden = false;
+    const r = d.getBoundingClientRect();
+    tip.style.left = r.left + "px";
+    tip.style.top = r.bottom + 4 + "px";
+}
+
+function table(title, headers, rows, kind, pinnedRows) {
+    const pinById = Object.fromEntries(pinnedRows.map(([p]) => [p.id, p]));
+    const cells = rows.map((r, i) => `<tr class="pinnable${pinById[r[0]] ? " pinned" : ""}"${pinById[r[0]] ? ` style="color:${pinById[r[0]].color}"` : ""} data-kind="${kind}" data-id="${r[0]}" data-label="${esc(JSON.stringify(r[1]))}"><td>${i}</td><td>${esc(JSON.stringify(r[1]))}</td>${r.slice(2).map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+    const pcells = pinnedRows.filter(([p]) => !rows.some(r => r[0] == p.id)).map(([p, rank, ...vals]) => `<tr class="pinned" style="color:${p.color}"><td>${rank}</td><td>${esc(JSON.stringify(p.label))}</td>${vals.map(v => `<td>${v}</td>`).join("")}</tr>`).join("");
+    const cols = `<colgroup><col style="width:58px"><col>${headers.slice(1).map(() => '<col style="width:92px">').join("")}</colgroup>`;
+    return `<div><b>${title}</b><table>${cols}<tr>${["#", ...headers].map(h => `<th>${h}</th>`).join("")}</tr>${cells}${pcells}</table></div>`;
+}
+
+function render() {
+    if (!data) return;
+    const layer = +$("layer").value;
+    $("layerval").textContent = layer;
+    const norms = pins.map((p, j) => {
+        if (!p.on || !pinData[j]) return null;
+        const vals = pinData[j].val[layer];
+        const mn = Math.min(...vals), mx = Math.max(...vals);
+        return vals.map(v => mx > mn ? (v - mn) / (mx - mn) : 0);
+    });
+    document.querySelectorAll("#strip .tok").forEach((d, i) => {
+        d.classList.toggle("sel", i == pos);
+        d.querySelectorAll(".bar").forEach(b => b.remove());
+        pins.forEach((p, j) => {
+            if (!norms[j]) return;
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            bar.style.background = p.color;
+            bar.style.opacity = norms[j][i];
+            d.appendChild(bar);
+        });
+    });
+    const jPinned = [], tPinned = [];
+    pins.forEach((p, j) => {
+        const pd = pinData[j];
+        if (!p.on || !pd) return;
+        if (p.kind == "tok") jPinned.push([p, pd.rank[layer][pos], pd.val[layer][pos], pd.prob[layer][pos]]);
+        else tPinned.push([p, pd.rank[layer][pos], pd.val[layer][pos]]);
+    });
+    const where = `L${layer} · pos ${pos} ${esc(JSON.stringify(data.toks[pos]))}`;
+    $("tables").innerHTML =
+        table(`jlens · ${where}`, ["Tok", "Logit", "Prob"], data.jlens[layer][pos], "tok", jPinned) +
+        table(`tlens · ${where}`, ["Template", "Cos"], data.tlens[layer][pos], "tmpl", tPinned);
+}
+
+$("tables").onclick = e => {
+    const tr = e.target.closest("tr.pinnable");
+    if (tr) addPin(tr.dataset.kind, +tr.dataset.id, JSON.parse(tr.dataset.label));
+};
+document.onkeydown = e => {
+    const el = e.target;
+    if (!data || el.tagName == "TEXTAREA" || el.tagName == "SELECT" || (el.tagName == "INPUT" && el.type != "range" && el.type != "checkbox")) return;
+    if (e.key == "ArrowLeft" || e.key == "ArrowRight") {
+        const s = $("layer");
+        s.value = +s.value + (e.key == "ArrowRight" ? 1 : -1);
+        e.preventDefault();
+        render();
+    }
+};
+</script>

@@ -1,0 +1,92 @@
+[
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/eval_v4_13_10_qwen_27b/pg0005",
+    "prompt_id": "644dacf336a7657193f046f7c81b8f45e946e548b89c58fdd069b97c49da7ae90c"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/eval_v4_13_10_qwen_27b/pg0018",
+    "prompt_id": "6497ce5ddc2f5995a0dca9a77845900b644034a6bbffbf8e0dda9aaf4aae462890"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/eval_v4_13_10_qwen_27b/pg0008",
+    "prompt_id": "64ed36509b3f5ff3b409c97644867520674f64a6899f874bd344ed740a67200d59"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "643d58e5951510446376132d3ab7830ed297468e29efa61091f534246382c9991d"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "649572bf43a6342022f59e6d9f558b80545be72d6e07c06e513c3f14e6588cbe8b"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "644e255a2a43ccbb21f4c1e9861a5a66e9a69803b988cbeedcad12a5f5f540df26"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007",
+    "prompt_id": "64861ba7b8111fb33f0f277099b128abe4ba2eb18b10d241207d8c99a1c31c7acf"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0021",
+    "prompt_id": "6437baf4eb304ed138c23baf7bb2725a6d9f1c58ede328c11a58146a473715c5bb"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0029",
+    "prompt_id": "643e4396315c3a613b8fed391b9e38ed7a2bc14c8513e6969ac623894912f1948e"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/bloom_rewrite_v4_13_1/pg0049",
+    "prompt_id": "64a53ef7818a46e0a88c3564235f2201f64e5be81c8168b37f71f0d01605cfc25d"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/eval_v4_13_10_qwen_27b/pg0006",
+    "prompt_id": "64f8f0918987182997fa3626f3f6b9108046836a501a7451ea2a9096f8a609ca22"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/eval_v4_13_10_qwen_27b/pg0069",
+    "prompt_id": "643758c0bd0a407624b39ec72a4d0bf5301ed5ec41b327fd808836722808d3815b"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0021",
+    "prompt_id": "646de8e21ef5ab35be0a3da29cebba14f2780643e57e25a8bb1d545ef881d4a3a2"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0016",
+    "prompt_id": "64eefb0a7f4ce61e7d20f5c456aff54c15b0f9847ab81a9d2443f8a2d524eb37cc"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0037",
+    "prompt_id": "64a1d0ca42e46a7bf641d601c6291b9c98268040226571d19c3838b439f7b8a701"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0011",
+    "prompt_id": "6431e95c5e6ff6e5e5ff2705367faeff3487494053fad3e8c6186a25bc06b4f108"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0067",
+    "prompt_id": "640da66c418170d974bb3bca27d260126defc3c9877bddccf6771ae6ddba86c2e8"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013",
+    "prompt_id": "648552fd1d61be19c67831bebc74ec37c43b5ff14837b9b0e63c46777b42e6b5d3"
+  }
+]

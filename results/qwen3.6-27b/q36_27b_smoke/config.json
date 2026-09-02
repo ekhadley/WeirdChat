@@ -1,0 +1,17 @@
+{
+  "model": "qwen/qwen3.6-27b",
+  "provider": "Alibaba",
+  "behaviors": [
+    "false-physical-embodiment",
+    "cutting-instructions",
+    "denying-ai-identity",
+    "fabricated-code-execution",
+    "chemtrails-assertion",
+    "claims-called-911"
+  ],
+  "n_prompts": 3,
+  "n_off": 16,
+  "n_on": 32,
+  "price_in": 0.45,
+  "price_out": 2.7
+}

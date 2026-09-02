@@ -67,7 +67,7 @@ async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: boo
         if attempt:
             await anyio.sleep(2**attempt)
         try:
-            reply = await client.chat.completions.create(
+            # reply = await client.chat.completions.create(
                 model=cfg["model"],
                 messages=[{"role": m.role, "content": m.content} for m in messages],
                 temperature=TEMPERATURE,
@@ -170,7 +170,15 @@ async def main(name: str) -> None:
     behavior_ids = sorted({pattern.behavior_id for pattern, _ in targets})
     print(f"  {gray}{len(targets)} target prompts over {len(behavior_ids)} behaviors; {len(records)} records already in {run_dir(name)}{endc}")
 
-    if any(done[(prompt.prompt_id, on)] < n for _, prompt in targets for on, n in ((False, cfg["n_off"]), (True, cfg["n_on"]))):
+    deficit = {tag: sum(max(n - done[(prompt.prompt_id, on)], 0) for _, prompt in targets) for tag, on, n in (("off", False, cfg["n_off"]), ("on", True, cfg["n_on"]))}
+    print(f"{purple}=== config ==={endc}")
+    for k, v in cfg.items():
+        print(f"  {cyan}{k:10s}{endc} {v}")
+    print(f"  {cyan}{'to sample':10s}{endc} off={deficit['off']} on={deficit['on']}")
+    if input(f"{yellow}proceed? [y/n] {endc}").strip().lower() != "y":
+        raise SystemExit(f"{red}aborted{endc}")
+
+    if deficit["off"] or deficit["on"]:
         print(f"{purple}=== reasoning probe ==={endc}")
         probe = await sample_once(cfg, [Message(role="user", content="What is 17 * 23?")], reasoning_enabled=True)
         if probe is None or (not probe["reasoning_tokens"] and probe["reasoning"] is None):

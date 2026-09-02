@@ -19,6 +19,7 @@ import json
 import re
 
 import markdown
+import pyarrow  # noqa: F401  -- must load in the main thread: its mimalloc allocator breaks if first imported from a request thread that then exits
 from flask import Flask, redirect, request
 
 import weirdchat as wc
