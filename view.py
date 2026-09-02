@@ -10,6 +10,12 @@ and "matched" shows matched/total under both, so it reads as the match rate for 
 rows server-side and highlights hits; sort dropdown reorders the list. The collapsible sidebar
 lists every run under results/, with its own filter box.
 
+CoT resampling output (results/<model>/resample/<run>_<idx>/, from resample.py) appears as one sidebar entry per model,
+"<model>/resample". Its right pane shows the o_t = P(match | prefix_t) curve with Wilson bands, the base reasoning
+token by token with background intensity = o_t (a token is colored by the nearest resampled position at or before it;
+positions not resampled are dimmed), and, on clicking a token or curve point (h/l to step), that position's rollouts
+with judge verdicts, continued reasoning, and responses.
+
 Usage: uv run python view.py
 """
 
@@ -34,7 +40,17 @@ _prompt_texts: dict[str, str] = {}
 
 
 def all_runs() -> list[str]:
-    return sorted(p.removeprefix("results/").removesuffix("/records.jsonl") for p in glob.glob("results/*/*/records.jsonl"))
+    replay = {p.removeprefix("results/").removesuffix("/records.jsonl") for p in glob.glob("results/*/*/records.jsonl")}
+    resample = {p.split("/")[1] + "/resample" for p in glob.glob("results/*/resample/*/scores.json")}
+    return sorted(replay | resample)
+
+
+def resample_names(model: str) -> list[str]:
+    return sorted(p.split("/")[3] for p in glob.glob(f"results/{model}/resample/*/scores.json"))
+
+
+def load_scores(model: str, name: str) -> dict:
+    return json.load(open(f"results/{model}/resample/{name}/scores.json"))
 
 
 def load_run(run: str) -> tuple[list[dict], list[dict]]:
@@ -127,6 +143,84 @@ def right_panel(run: str, i: int, r: dict, prompt: str) -> str:
     return "".join(parts)
 
 
+# ---- CoT resampling (results/<model>/resample/<run>_<idx>/{scores.json,rollouts.jsonl}, written by resample.py) ----
+
+def resample_row(i: int, sc: dict) -> str:
+    s0, sT = sc["scores"][0], sc["scores"][-1]
+    return (f'<div class="row" data-idx="{i}" onclick="select({i})"><span class="row-beh">{esc(sc["behavior_id"].split("-")[0])}</span> '
+            f'<span class="row-prev">{esc(sc["run"])}/{sc["idx"]} &middot; S={sc["S"]} &middot; {len(sc["scores"])} pos &middot; o<sub>0</sub>={s0["p_match"]:.2f} &rarr; o<sub>T</sub>={sT["p_match"]:.2f}</span></div>')
+
+
+def curve_svg(scores: list[dict], i: int) -> str:
+    T, W, H, PAD = len(scores), max(600, 9 * len(scores)), 150, 24
+    x = lambda k: PAD + k * (W - 2 * PAD) / max(T - 1, 1)
+    y = lambda p: PAD + (1 - p) * (H - 2 * PAD)
+    band = " ".join(f"{x(k):.1f},{y(s['ci'][1]):.1f}" for k, s in enumerate(scores)) + " " + " ".join(f"{x(k):.1f},{y(s['ci'][0]):.1f}" for k, s in reversed(list(enumerate(scores))))
+    line = " ".join(f"{x(k):.1f},{y(s['p_match']):.1f}" for k, s in enumerate(scores))
+    pts = "".join(f'<circle class="pt" data-t="{s["t"]}" cx="{x(k):.1f}" cy="{y(s["p_match"]):.1f}" r="3" onclick="selPos({i},{s["t"]})">'
+                  f'<title>t={s["t"]} {esc(repr(s["token"]))} p={s["p_match"]:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}</title></circle>' for k, s in enumerate(scores))
+    grid = "".join(f'<line x1="{PAD}" x2="{W - PAD}" y1="{y(g):.1f}" y2="{y(g):.1f}" class="grid"/><text x="4" y="{y(g) + 4:.1f}" class="ax">{g:.1f}</text>' for g in (0, 0.5, 1))
+    return f'<div class="curve"><svg width="{W}" height="{H}">{grid}<polygon class="band" points="{band}"/><polyline class="line" points="{line}"/>{pts}</svg></div>'
+
+
+def tok_span(i: int, s: dict, text: str, observed: bool) -> str:
+    p = s["p_match"] if s["p_match"] == s["p_match"] else 0.0  # nan when nothing judged at this position
+    title = f't={s["t"]} p={p:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}'
+    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(251,73,52,{0.85 * p:.2f})" title="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
+
+
+def token_strip(sc: dict, i: int) -> str:
+    by_t = {s["t"]: s for s in sc["scores"]}  # each token is colored by the nearest observed position at or before it
+    spans, cur = [tok_span(i, by_t[0], "&lt;think&gt;", True)], 0
+    for k, tok in enumerate(sc["tokens"], start=1):
+        cur = k if k in by_t else cur
+        spans.append(tok_span(i, by_t[cur], esc(tok), k in by_t))
+    return f'<div class="toks">{"".join(spans)}</div>'
+
+
+def resample_panel(model: str, i: int, sc: dict) -> str:
+    base = load_run(sc["run"])[0][sc["idx"]]
+    tag = f'<span class="tag" title="click to copy (paste into the lens viewer)" onclick="navigator.clipboard.writeText(this.textContent)">{esc(sc["run"])}/{sc["idx"]}</span>'
+    meta = f'behavior={sc["behavior_id"]} | resampled via {sc["provider"]} S={sc["S"]} | {len(sc["scores"])} positions over {len(sc["tokens"])} reasoning tokens | base rollout via {base.get("provider")}'
+    return (f'<div class="panel" data-idx="{i}"><div class="meta">{tag} | {esc(meta)}</div>'
+            f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step</div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
+            f'<div class="pos" id="pos-{i}"><div class="placeholder">select a position</div></div>'
+            f'<div class="label label-user">prompt</div><div class="mdbox">{md(prompt_text(base["pattern_id"], base["prompt_id"]))}</div>'
+            f'<div class="label label-asst">base response ({"MATCH" if base["judge_match"] else "NO MATCH"})</div><div class="mdbox">{md(base["response"])}</div></div>')
+
+
+def rollout_card(r: dict) -> str:
+    cls, txt = {"match": ("b-match", "MATCH"), "nomatch": ("b-nomatch", "no"), "other": ("b-off", "other")}[r["category"]]
+    return (f'<div class="card"><div class="card-head"><span class="b {cls}">{txt}</span><span class="card-meta">i={r["i"]} {r["completion_tokens"]} toks</span><span>{esc(r.get("judge_explanation") or "")}</span></div>'
+            f'<div class="think cont">{esc(r["reasoning_cont"])}</div><div class="mdbox resp">{md(r["response"])}</div></div>')
+
+
+@app.route("/<model>/resample")
+def resample_index(model: str):
+    names = resample_names(model)
+    rows = "".join(resample_row(i, load_scores(model, n)) for i, n in enumerate(names))
+    return f"""<!doctype html><html><head><meta charset="utf-8"><title>{esc(model)} - CoT resampling</title><style>{CSS}</style></head>
+<body><div class="banner"><span class="side-toggle" onclick="toggleSide()" title="toggle run list">&#9776;</span>CoT resampling &mdash; {esc(model)} ({len(names)} records)</div>
+<div class="panes">{sidebar(f"{model}/resample")}<div class="left">{rows}</div><div class="divider"></div><div class="right"><div class="placeholder">select a record (j/k to navigate)</div></div></div>
+<script>const BASE = '/{esc(model)}/resample';{RJS}{SHARED_JS}</script></body></html>"""
+
+
+@app.route("/<model>/resample/panel/<int:i>")
+def resample_panel_route(model: str, i: int):
+    return resample_panel(model, i, load_scores(model, resample_names(model)[i]))
+
+
+@app.route("/<model>/resample/<int:i>/pos/<int:t>")
+def resample_pos(model: str, i: int, t: int):
+    name = resample_names(model)[i]
+    sc = load_scores(model, name)
+    s = next(s for s in sc["scores"] if s["t"] == t)
+    rolls = sorted((r for r in (json.loads(l) for l in open(f"results/{model}/resample/{name}/rollouts.jsonl")) if r["t"] == t), key=lambda r: r["category"] != "match")
+    prefix = esc("".join(sc["tokens"][:t])) or "(empty prefix: sampling starts right after &lt;think&gt;)"
+    return (f'<div class="label label-think">t={t} &mdash; p={s["p_match"]:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] &mdash; {s["match"]} match / {s["nomatch"]} no / {s["other"]} other</div>'
+            f'<div class="mdbox prefix">{prefix}</div>{"".join(rollout_card(r) for r in rolls)}')
+
+
 @app.route("/")
 def root():
     return redirect("/" + all_runs()[0])
@@ -142,7 +236,7 @@ def index(model: str, name: str):
 <body><div class="banner"><span class="side-toggle" onclick="toggleSide()" title="toggle run list">&#9776;</span>reasoning replay &mdash; {esc(run)} ({len(RECORDS)} samples)</div>
 {stats_bar(RECORDS)}
 <div class="panes">{sidebar(run)}<div class="left">{rows}</div><div class="divider"></div><div class="right"><div class="placeholder">select a sample (j/k to navigate)</div></div></div>
-<script>const BASE = '/{esc(run)}';{JS}</script></body></html>"""
+<script>const BASE = '/{esc(run)}';{SHARED_JS}{JS}</script></body></html>"""
 
 
 @app.route("/<model>/<name>/panel/<int:i>")
@@ -231,6 +325,20 @@ body.side-hidden .side { display: none; }
 .mdbox ul, .mdbox ol { margin-left: 20px; margin-bottom: 8px; }
 .think { color: #d3869b; font-style: italic; }
 mark.hl { background: #264f78; color: #ebdbb2; border-radius: 2px; padding: 0 1px; }
+.curve { overflow-x: auto; background: #32302f; border-radius: 4px; padding: 4px; }
+.curve .grid { stroke: #504945; } .curve .ax { fill: #7c6f64; font-size: 10px; }
+.curve .band { fill: #fb493433; } .curve .line { fill: none; stroke: #fb4934; stroke-width: 1.5; }
+.curve .pt { fill: #fb4934; cursor: pointer; } .curve .pt:hover, .curve .pt.sel { fill: #fabd2f; r: 5; }
+.toks { background: #32302f; border-radius: 4px; padding: 10px 12px; margin-top: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.9; }
+.tok { cursor: pointer; border-radius: 2px; padding: 2px 0; } .tok:hover { outline: 1px solid #fabd2f; } .tok.sel { outline: 2px solid #fabd2f; }
+.tok.unobs { color: #928374; }
+.pos { margin-top: 14px; }
+.prefix { color: #928374; font-style: italic; white-space: pre-wrap; margin-bottom: 10px; font-size: 13px; }
+.card { background: #32302f; border-left: 3px solid #504945; border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; }
+.card-head { display: flex; gap: 8px; align-items: baseline; font-size: 12px; color: #a89984; margin-bottom: 6px; }
+.card-meta { color: #665c54; font-family: monospace; font-size: 11px; white-space: nowrap; }
+.cont { white-space: pre-wrap; margin-bottom: 6px; font-size: 13px; }
+.resp { background: #282828; }
 """
 
 JS = """
@@ -377,7 +485,49 @@ function resort(selEl) {
         .sort((a, b) => key === 'default' ? a.dataset.ord - b.dataset.ord : b.dataset[key] - a.dataset[key])
         .forEach(r => left.append(r));
 }
+apply();
+"""
 
+# Resampling page: row selection loads the record panel; a token or curve point loads that position's rollouts; h/l step positions.
+RJS = """
+let sel = null, curPos = null;
+function visibleRows() { return Array.from(document.querySelectorAll('.row')); }
+async function select(idx) {
+    document.querySelectorAll('.row.sel, .panel.sel').forEach(e => e.classList.remove('sel'));
+    document.querySelector('.row[data-idx="'+idx+'"]').classList.add('sel');
+    let panel = document.querySelector('.panel[data-idx="'+idx+'"]');
+    if (!panel) {
+        document.querySelector('.right').insertAdjacentHTML('beforeend', await (await fetch(BASE + '/panel/' + idx)).text());
+        panel = document.querySelector('.panel[data-idx="'+idx+'"]');
+    }
+    panel.classList.add('sel');
+    document.querySelector('.placeholder').style.display = 'none';
+    document.querySelector('.right').scrollTop = 0;
+    sel = idx; curPos = null;
+}
+async function selPos(i, t) {
+    const panel = document.querySelector('.panel[data-idx="'+i+'"]');
+    panel.querySelectorAll('.tok.sel, .pt.sel').forEach(e => e.classList.remove('sel'));
+    panel.querySelectorAll('.tok[data-t="'+t+'"], .pt[data-t="'+t+'"]').forEach(e => e.classList.add('sel'));
+    curPos = t;
+    const box = document.getElementById('pos-' + i);
+    box.innerHTML = await (await fetch(BASE + '/' + i + '/pos/' + t)).text();
+}
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT') return;
+    const rows = visibleRows();
+    const cur = rows.findIndex(r => r.dataset.idx == sel);
+    if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); select(rows[Math.min(cur + 1, rows.length - 1)].dataset.idx); }
+    if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); select(rows[Math.max(cur - 1, 0)].dataset.idx); }
+    if ((e.key === 'h' || e.key === 'l') && sel !== null) {
+        const ts = Array.from(document.querySelectorAll('.panel.sel .pt')).map(p => +p.dataset.t);
+        const k = ts.indexOf(curPos);
+        selPos(sel, ts[Math.min(Math.max(k + (e.key === 'l' ? 1 : -1), 0), ts.length - 1)]);
+    }
+});
+"""
+
+SHARED_JS = """
 document.querySelector('.divider').addEventListener('mousedown', function(e) {
     e.preventDefault();
     const panes = document.querySelector('.panes');
@@ -398,7 +548,6 @@ function toggleSide() {
     try { localStorage.setItem('sideHidden', hidden ? '1' : ''); } catch (e) {}
 }
 try { if (localStorage.getItem('sideHidden')) document.body.classList.add('side-hidden'); } catch (e) {}
-apply();
 """
 
 if __name__ == "__main__":

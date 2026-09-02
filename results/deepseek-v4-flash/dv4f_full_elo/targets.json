@@ -1,0 +1,487 @@
+[
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0009",
+    "prompt_id": "64b2c43ad1d82058237b6f176a8e0461db38911a06bcb9271e1d386802a3dd2be2"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "640c8127ee74e709613a31c6c0f28b4d6e59d1c0ff4dd1ffe047658bc5b1b93171"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0011",
+    "prompt_id": "64e67b9b2c2cfd4e181febf68d99c8e7015cb9542b05e80fb48a4ed2202da047e6"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0007",
+    "prompt_id": "646ba12f4b0b193b5bc8ff9042c42dd28bc9b3f831226a9b14d0f725c2e4ff0ebd"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/eval_v4_12_2_deepseek_v4_flash/pg0004",
+    "prompt_id": "64ca3c0a6d89ea4e0cae7aaa622e189cc725e62cc838b8c75c0e81ea82a517b769"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/eval_v4_12_2_deepseek_v4_flash/pg0007",
+    "prompt_id": "64f8314964252152988ed46729a1c9cb135cae68c926fb819336f8066abe533b44"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0033",
+    "prompt_id": "644a759b618f21e28df6f7fe47e581dc14110fa6f43bf359eea60011c558d17e95"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0057",
+    "prompt_id": "64f4f47c7d674d44c0cbb739b13a3f0035e2bc4cd5ecf8f2aa07f30145804a6053"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0047",
+    "prompt_id": "64fdd086bf02848eeeb0f4b9e9ce141cc14365f7792f29645ec92bfdd0ec9e35b0"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0066",
+    "prompt_id": "6414d9c48d351f295fadd23679864e5ecdbe72b1dc64a79c2398752c662bbefebe"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0044",
+    "prompt_id": "64c427b30e9421e13b987ecf16e18a4f7adfe325d90445f6d1b4f22a059ab4ac30"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0026",
+    "prompt_id": "6411b5e7d34a77badb67c6c80a1fd74260d28ab38628f3bc285cf58dbce141f615"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0002",
+    "prompt_id": "64b79a2d4597c5db25ed644fd2dff4123b0c76752c54181a0c50c59f9fd39b17aa"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "64a2f7548d5cd93e54b4d96e357ed51db2eaeda4fad17f137ef1ab0081d4fb3616"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "6453c389ba3f4a70b67df951be45dd88f1584c72bf5991ec8b12235d5419181abb"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "640c1a48f98df68784c0c6b5c3883a6689905c0aea9874563c5c06a747ceb8e21e"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "6482f3a96241c85cf4c24485e4565be80f8fc2522fa0a86b59e0f965ec6029c63f"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "64058f94ede9f8760d8e2505a315acc45a6525ca04d7d56067adaaaad53ddb6fbc"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "64a750c22b5243564eaf04844e32cc909c73ed9eb62e8a2070554594192971163f"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0004",
+    "prompt_id": "642d0fcfd19e1928390037a44a36c574a33859bc8c93ca8da64d5efa12604a2a5b"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/bloom_rewrite_v4_13_6/pg0006",
+    "prompt_id": "6434a0acf3b1901af586a645e79db278e3900112f859b2453a9d960c266c122a1c"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/bloom_rewrite_v4_13_6/pg0005",
+    "prompt_id": "6446bbf898c5f49b8d928297e1d34e380652ef634816fafc5e838614a03d90a209"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0035",
+    "prompt_id": "6453c3328fc4b46ad2b81c8ddf284873ea85f06d066bf778e68ec71c366b2f6306"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0032",
+    "prompt_id": "6413925f100c959e6af0374468f9779fd15f85b15aace01490109bb0cd6877e249"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/eval_v4_12_2_deepseek_v4_flash/pg0018",
+    "prompt_id": "648d52b64eed3d6fef84377ff4f889b774fa48deec404e48d6dedb240adee8aa72"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/eval_v4_12_2_deepseek_v4_flash/pg0005",
+    "prompt_id": "64b563fb191435990eb2704b9eccdc8807a3c52272b65b25071565cb6dad80043b"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/bloom_rewrite_v4_13_6/pg0026",
+    "prompt_id": "6484264e32c505e0fd3ffc4cf1034a70767c6d26c371aa3589eb7564efb299fc68"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/eval_v4_12_2_deepseek_v4_flash/pg0013",
+    "prompt_id": "64b527e193766ff53ce5c57e28a15006532eb4032ff8a420ea44829c571739670e"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/eval_v4_12_2_deepseek_v4_flash/pg0024",
+    "prompt_id": "64d0d877820943b9c9bc7c9e802fcfc48762bd10ea30b3e1f65eeac202524b797c"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/bloom_rewrite_v4_13_6/pg0038",
+    "prompt_id": "64ec0ce1753cd37c1af2c4f46f8302c16c6736b408d3a50ca2290129dc73cea601"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0005",
+    "prompt_id": "64bc1e701668f3aebc88d0ed21210dd84bf7d6277282ebc8b0e449a020da2d5c2c"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0009",
+    "prompt_id": "6439ce8ff6337cd25747069525d16a34febbbd5e42f1361dc41fde3ffc01ad140a"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0001",
+    "prompt_id": "64424d1ec866903e769cef8714da2c927c357e5c2376045110c4fcaac8209f5d7b"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0012",
+    "prompt_id": "64c95f41975076f38cf49389790a286df32279d1c3c5881712e504f3b81ed09a93"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0008",
+    "prompt_id": "648dbbd71fd31534214f290e7744a86630ee5e58459a8d85c456e04b623ea6d78b"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0006",
+    "prompt_id": "645774aaf6b0570d443e774f8a5979e58a2831a253128c8947905a6b294ee90c7b"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "64f45e3a0f7d8b26b1c989055af67b91bb565e245b60acc3ac82afb62aac985c38"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0003",
+    "prompt_id": "6487acb27caccadfbc8691aa5f8bc8b269617bee6fa0723c4326f017a8a07847d1"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0002",
+    "prompt_id": "64ae23ad00b495dc16c98c83377ce51d511084974003b9c221e8e847ce3b6612c5"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0004",
+    "prompt_id": "64684835a312961d0cad8f8d1f883f3d36059d0872bb663ada59d212205ac96584"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "649c6775b0dc68b8360cd7966d877623d2bc97d4b7902bf95354a398eeb2a33be3"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0005",
+    "prompt_id": "64146660c6588a642cf87318b214d948ffdecb3422f9faec8e39b0e19ec8afd217"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0021",
+    "prompt_id": "64e2d4d09d9f8e1fa5db18358a17941c9842ba6f416e3eb768d3926f7b526f76d4"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0005",
+    "prompt_id": "640f5bc203e718bff06214894123a49cbcb04b3562b85040f4c2eaf0022e674bc3"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0101",
+    "prompt_id": "64eba8e18c3a7e20e411627603abb89f7453ae7dc9a1750057d6a6fd0cefe0ce77"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/bloom_rewrite_v4_13_6/pg0036",
+    "prompt_id": "643dfef4b10b1eec63937bcd8844c088b48a984f26a9d2d40d0ba638645c9a2c88"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0090",
+    "prompt_id": "6486ecdc2ba3d73ca70868fc9dadcc531d6fb718327943ade9bd0ec14f016c34be"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/bloom_rewrite_v4_13_6/pg0126",
+    "prompt_id": "64bc300bbc2217760536115a9b888d5a1f13bd682b2316ab3b1dc3dc393b73443d"
+  },
+  {
+    "behavior_id": "fabricated-user-name",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-user-name/eval_v4_10_5/pg0004",
+    "prompt_id": "64032c4d45564d55d5e522226df3aab5d66545b0613e7d17583f509c86aa0cd3ba"
+  },
+  {
+    "behavior_id": "fabricated-user-name",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-user-name/eval_v4_10_5/pg0001",
+    "prompt_id": "647ab502cd6c45f2b5643bcead0ba089a84062a438b6941788d126006861b50d1f"
+  },
+  {
+    "behavior_id": "fabricated-user-name",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-user-name/eval_v4_10_5/pg0006",
+    "prompt_id": "64b17a3f5e8e2d4844ee45a597dc0c0da1b48d1e0a9a959dce2e0374023218e89e"
+  },
+  {
+    "behavior_id": "fabricated-user-name",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-user-name/eval_v4_10_5/pg0001",
+    "prompt_id": "6467b3da2bba4a55f80233e6d2bc00314f19f2ec9f285ecb96b6b4f6636dbeb4a6"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0029",
+    "prompt_id": "64215e0c9fbbb51fe7788e856c74363544b94b9aec83a91d99b84f775b0f42cd62"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/bloom_rewrite_v4_13_6/pg0074",
+    "prompt_id": "640edd7f141eb4c7f336e02b163a80ac1c3318bf10343de36d4adfe01156e8d422"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/bloom_rewrite_v4_13_6/pg0066",
+    "prompt_id": "64bcfb6a8aa962ced8ef4cbf98b0f5ab9b53ceeb241989f82024d5109a879a6df3"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0038",
+    "prompt_id": "6492b77926ff7d78bc7e6880c8bcd930affaaf800088ef25bebe35f4084d96dffc"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/bloom_rewrite_v4_13_6/pg0026",
+    "prompt_id": "641f102678683ca4432ecb34593277e75963b7656403356c49e5eee0a604236e26"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0068",
+    "prompt_id": "64cf9362e0a04ecb41474d21cf84bf56e2067f6a94ed15cd323f74a025d2ff6abf"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0010",
+    "prompt_id": "64b9a99443ed3e8ed16b11b80cf4711fd68833f2f56ffb44a15d08df3ef23c1a62"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/eval_v4_10_5/pg0001",
+    "prompt_id": "64e22031053d7a48f7822c4a8b8fe75b4740691bfd21dc660e96b33b21312c13be"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/eval_v4_10_5/pg0003",
+    "prompt_id": "6496e5aad73f7d4e201e742c2a9e2369e3e8acafda51eaa5701799e98d69522e7a"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0008",
+    "prompt_id": "6421472a09a4842c070f96fe17fec2184f675252a7abf719c2a41d91aada41a7db"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "640ff3bc178aeda2264635e2e65f6e8b59f6111834bc1c217dd8d55d21ef37c4cd"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0002",
+    "prompt_id": "64b3219ba74054204fe7478dc479a1e81acdbb80bf1ee2d3bc426886c81e904426"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/bloom_rewrite_v4_13_6/pg0019",
+    "prompt_id": "646e7bd1296645e634126671ed528dabc87debab8f47e62eb21d47773229c1d333"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0305",
+    "prompt_id": "643219c3f2f4342e66b3a2eb4c4d676733554b761bdd178fc6c5bb8dc6183f064e"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "64fb278a93dea5ef39885d4ec136766008264c459b33674ae89408dc5637f03741"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0575",
+    "prompt_id": "64be540ca23173fd06a09e8d68e2b00ede81244d899ab618fa80d80335d58be6e1"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0014",
+    "prompt_id": "64f1289a36c78d0e65ade12b7dcde7828d05388a1cafab8be3456dd21a077b7894"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0046",
+    "prompt_id": "646418d8c86cf71c53bffe4c20958790f8549aa77c0c2341eb28bdcdcfa54c7dcb"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "64a744fe56c36a6c8451c5a527b1b275d2012d67ee28155695fb479424f4bfd6b3"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "6471a8c6a768b24a304efb96c9eca661987dce940ea6b04ef3446a0d8a4d6757d6"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/eval_v4_12_2_deepseek_v4_flash/pg0003",
+    "prompt_id": "64c0a319543415d510042beb6f1dcb84ebcddba74fefffdcb9eabe3f63f8cb96d9"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "640a5dff31a4812a4e9b780534313727bd32a5da63a399567b4e4378dd6b1fea09"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "645574fc95cee3f0c214489b27f12acdaf43cfb11a28d4e620bf5210f34126a066"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "641b38f7ce1324161ee1d9bf33e26010836d349e6aa759a257503d1bbf8560671d"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0017",
+    "prompt_id": "64eb3cb7de8bfb1807b4cfaf7095f2df6198ab17c00c4e98876e55328c669c57ba"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0005",
+    "prompt_id": "64651b81fd65fa8bddfafe29d82c348b92df1ed0a4b24aa6ac4fabc6df644572d5"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0002",
+    "prompt_id": "64522a91dabac9fdc5757f443e3d55aeecad80e61ec05dfe8eb0c3038ad6078ae2"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0007",
+    "prompt_id": "64ecede0b7e14e4f412fc5bb56bd666203bf27f0513361501ddc87604a53a8039e"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "6425e84c0c311abe40981bcee2b57ad40fded71228ba98abbbc82c8dd74d75bcd3"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0011",
+    "prompt_id": "64447359a025b77da5cca23ddd2eff9d2eef2d7ac33b139a41913eb754b149f120"
+  },
+  {
+    "behavior_id": "recommends-hard-drugs",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-hard-drugs/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "644b285c3bbaa2963fd393222abac3eacbc299f8208d2878b580edcaec33d87d28"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64c3ceab9fd975e586581dc06cb6142f9be146b3fae65ac692b130e84110ee36f2"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "649c2352b03559c8b73a3e7b975e9b1f497a6b113ae141c86b75fd5a8bd2343aba"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64b84379426cb7aafd62622eafb761f3f8422b910a69fd9e7be5034dfb92451946"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64fd73773c2c5550d9dbd6c52eac0e4c1e8f9f1ed200d6d00ee4afede23a38c1c5"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64573dfe5c26da26d4decd55077bbf0aa5ffa5f3e3d00a5933789c0575ccb6df69"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "6445e88386e5310c9fb3ca8ffa6c1802b296242574b1de8c58d5a0d28cec37cf56"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0004",
+    "prompt_id": "6423c193f5bd7b39cbd9bbf4db614e38be842c7979796ca20112723723d631816b"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0002",
+    "prompt_id": "64c05bc55e637ceb0429e912e251bc0e04107a7d17f4c2f16a0d5c75920a08df27"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0006",
+    "prompt_id": "648a0047ded9a4f6bca68134b5775d4edf9ce4a515fd1e62c5d923d511e5fb755d"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0007",
+    "prompt_id": "640391b4f28f332b15284cfb007455c653a3f80a6e6372d2f7cc4d48d548a72b95"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0005",
+    "prompt_id": "6439ce6a5c3ac11e715c516c78b71134a5f2a3bd6182813b8aa226d3bdbf243d82"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0001",
+    "prompt_id": "64ff30563e7a2e54e79d8406bdf27c73edf5abc2f78fa12cf3caaa81a60f2296be"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/unsolicited-sexual-advances/bloom_rewrite_v4_13_6/pg0005",
+    "prompt_id": "64c75054477d97cad73c737171a7cd32aa9a981a9f1b5acd813eec71c7566c0028"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/unsolicited-sexual-advances/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "6465a23af3673a2901d9fd605e82f43a691d7124b2adebcd03ad9d34fd3ad6e819"
+  }
+]

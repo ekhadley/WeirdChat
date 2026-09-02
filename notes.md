@@ -1,9 +1,5 @@
 # Examining reasoning traces on adversarial prompts from WeirdChat
-> 8hr
-
-## findings:
-- 
-
+> 9.5hr
 
 ## Motivation/Goals/Specific Questions
 - background:
@@ -24,8 +20,8 @@
 
 
 ### 2026-08-31
-- Day 1 of project.
-    - [ ] todo: expound on motivation, goals above
+> Day 1 of project.
+- [ ] todo: expound on motivation, goals above
 
 - did quick sanity check with deepseek-v4-flash
     - small test of 3 behaviors (chemtrails, denying being an AI, and fabricated benchmarking):
@@ -54,7 +50,7 @@
             - how much does this matter for investigating?
 
 ### 2026-09-02
-- Day 2
+> Day 2
 
 - Need to think about the goals here. let me brainstorm some (non-exclusive) potential goals/questions for a potential shopping list
     - how much do models still do the behaviors with reasoning on/off?
@@ -137,13 +133,29 @@
                     - "The user presents it as an observation, likely seeking scientific or pseudo-scientific analysis"
                 - 4/6 seem to reference the prompt as a 'speculative scenario' or 'fictional scenario'
 
+        - gemma:
+            - [ ] todo
+
     - so we have some leads for explaining specific behaviors for specific models
 
     - here's a proposed plan:
-        - use CoT to try and explain a few interesting examples of CoT interp
-            - use prompt ablations to solidify these hypotehses
-            - try the same prompt ablations on the model without CoT
-                - how well do findings about the model with thinking trasnfer to the no-thinking case?
+        - on inkling/deepseek?
+            - use CoT to try and explain a few interesting examples with CoT interp
+                - use prompt ablations to solidify these hypotheses
+                - try the same prompt ablations on the model without CoT
+                    - how well do findings about the model with thinking transfer to the no-thinking case?
+            - for these prompts of interest, use CoT resampling to find the points where things go off the rails
+
+        - do cot interp/forensics on qwen 27b specifically
+        - then use lenses for hypotheses generation on qwen 27b
+            - use them for hypothesis testing on qwen 27b
+                - resample with certain things ablated
+
+        - compare the results of the two investigations
+
+    - white/black box though:
+        - we may expect this task to be easier for white box methods
+        - cot adds a confounder to the model, a way in which 
 
 - broader open questions:
     - what does counterfactuality mean?
@@ -153,3 +165,40 @@
         - the models do some of these behaviors at substantial rates without any chain of thought
         - chain of thought substantially reduces the rate of them happening drastically across the board
         - so what does it mean to find the "parts of chain of thought that lead to the model doing the behavior" when it would've done the behavior more without any CoT?
+            - it is still the case that generating from different points in a CoT will lead to different effects
+            - if the model only does a behavior very rarely (without CoT), it seems fair to say that the entire CoT is 'not counterfactually important'
+                - but if the CoT happens to, by unlikely chance, go to a point where resampling now leads to high rate of the bad, previously rare behavior, then that *is* a very counterfactually important sentence!
+            - basically counterfactual means high information
+                - things that are very likely to happen are high information
+                - things that are unlikely to happen are hgih information, and that's counterfactual importance
+            - A CoT that leads to a rare behavior will either:
+                - be entirely counterfactually unimportant: nothing is determined until the model writes it's answer. the CoT has basically no importance
+                - more likely, there will be some point in the CoT where the model has committed to its path
+                    - this is what we want to know
+
+- general investigation note:
+    - the technique of 'ablate this thing from all the chains of thought and resample' is not reliable in this setting
+        - reliable in the sense of we can't expect the results to reflect the state of mind of the non CoT model
+        - if we want to make the claim that "the presence of X in the CoT is causally important for inducing the bad/rare behavior"
+        - if the original model without CoT already believed X latently, then ablating the CoT wouldnt matter
+            - unlses the model could be changing it's mind based on the deliberation in the CoT?
+            - it will certaijnly be latently aware of X at the start of the cot, and therefore aware of the possibility of X throughout
+        - but most likely this method should be considered unreliable?
+
+- I like the plan above. concrete steps are now:
+    - [ ] select a behavior to investigate first
+        - selecting for interestingness/surprise
+            - this means either where the behavior itself is mysterious, or CoT strongly suggests a surprising hypothesis
+        - [ ] optionally select some others
+    - [ ] read the CoTs, develop discrete hypotheses
+    - [ ] come up wtih prompt ablations to test them
+    - [ ] test them on the CoT models
+    - [ ] do the same tests on the non CoT model
+
+    - select a behavior for qwen 3.6-27b
+        - selecting for the same things as before. interestingness in either the behavior itself or the CoT's suggested explanations
+    - [ ] read CoTs, generate hypotheses
+    - [ ] look at lenses, generate hypotheses
+    - [ ] test hypotheses with lense ablations + resampling
+    - [ ] test hypotheses with prompt ablations
+    - [ ] compare results of both investigation methods
