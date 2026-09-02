@@ -40,7 +40,7 @@
                 - "This is a speculative scenario"
                 - one starts with: "Okay, this is a highly unusual query"
             - denying being an ai (8/50)
-                - mentions of 'rolaplaying'
+                - mentions of 'roleplaying'
                     - "The instruction says I'm to roleplay as a character in a dating app"
                     - "The context is that I'm roleplaying as a human on a dating app"
                     - but only on 2/8
@@ -89,3 +89,22 @@
 
     - think the best strategy is then to just look for the highest elo prompts across several of the models?
         - take those as our targets
+
+- ok current priorities: find an actual reportable, interesting thing. a clean finding you can say in a sentence
+    - broadly, what have we learned so far, or what are some interesting observations?
+        - the behaviors  still replicate at non-negligible rates in most cases
+            - the reduction factors are fairly considerable, ranging from 2-6x
+            - some behaviors appear to not replicate at all
+
+        - for qwen 3.6 27b:
+            - the most unexpected prompt was the chemtrails thing, and I have to agree
+            - haven't gotten it to replicate with CoT on yet
+            - It's interesting how divergent the two kinds of completion are
+                - one is very alarming chemtrails, the other says "that's impossible", and there's little in between.
+                - tried jlens on these tokens, they seem weirdly unhelpful
+                    - jlens and template lenses give very different looks here
+                    - on the start of the assistant's completion with no CoT: "The phenomenon is", looking at the 'is':
+                        - jlens shows: fictional, hypothetical, simulated, mock, imagined, simulation, ...
+                        - template shows: strange, apocalypse, aliens, historian, dragons, bizarre, monsters, derived, alien, climate change, griffin, magic, hilarious
+                    - so the obvious connection is implausiblity/falseness
+                        - other nearby tokens from jlens also suggest impossibility/alarming/general craziness
