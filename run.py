@@ -32,6 +32,7 @@ RUNS = {
     "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], n_prompts=1, n_off=16, n_on=50, price_in=0.086, price_out=0.171),
     "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=3, n_off=32, n_on=64, price_in=0.0763, price_out=0.1526),
     "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=16, n_on=32, price_in=0.45, price_out=2.70),
+    "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider="Parasail", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], n_prompts=3, n_off=16, n_on=32, price_in=0.15, price_out=1.0),
 }
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
@@ -67,7 +68,7 @@ async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: boo
         if attempt:
             await anyio.sleep(2**attempt)
         try:
-            # reply = await client.chat.completions.create(
+            reply = await client.chat.completions.create(
                 model=cfg["model"],
                 messages=[{"role": m.role, "content": m.content} for m in messages],
                 temperature=TEMPERATURE,

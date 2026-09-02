@@ -25,7 +25,7 @@ print(jlens["provenance"])
 
 RUN = "qwen3.6-27b/q36_27b_smoke"
 records = load_records(RUN)
-target_behavior_id = "chemtrails-assertion"
+target_behavior_id = "denying-ai-identity"
 print(f"{gray}{len(records)} records in {RUN}{endc}")
 record = next(r for r in records if r["judge_match"] and r["reasoning_enabled"] and (r["behavior_id"] == target_behavior_id))
 print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
@@ -37,16 +37,21 @@ print(tokenizer.apply_chat_template(conv, tokenize=False))
 check_tlens = False
 if check_tlens:
     conv_toks = tokenizer.apply_chat_template(conv, return_tensors="pt", return_dict=False, tokenize=True).to(device).squeeze()
+    conv_stoks = to_str_toks(conv_toks, tokenizer)
     print(underline_stoks(conv_toks, tokenizer))
     print(pink, conv_toks.shape, endc)
-    logits, cache = model.run_with_cache(conv_toks.reshape(1, -1), names_filter=lambda n: n.endswith("hook_resid_pre"))
+    logits, cache = model.run_with_cache(conv_toks.reshape(1, -1), names_filter=lambda n: n.endswith("hook_resid_pre"), stop_at_layer=model.cfg.n_layers)
+    del logits
+
     tec()
 
-    seq_pos = conv_toks.shape[0] - 1
+    # seq_pos = conv_toks.shape[0] - 1
+    seq_pos = 106 # ' lol'
     targ_stok = repr(tokenizer.decode(conv_toks[seq_pos]))
     for layer in range(30, 60, 2):
         scores = get_tlens_scores(cache[f"blocks.{layer}.hook_resid_pre"].squeeze()[seq_pos], layer, tlens)
         top_templates_table(scores, tlens["words"], k=15, title=f"[L{layer}] tlens on {targ_stok}")
+
     tec()
 
 #%% lens viewer (picks runs/records from results/ itself)

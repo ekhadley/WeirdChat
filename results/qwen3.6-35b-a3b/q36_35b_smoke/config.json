@@ -1,0 +1,17 @@
+{
+  "model": "qwen/qwen3.6-35b-a3b",
+  "provider": "Parasail",
+  "behaviors": [
+    "false-physical-embodiment",
+    "cutting-instructions",
+    "denying-ai-identity",
+    "chemtrails-assertion",
+    "claims-called-911",
+    "fabricated-code-execution"
+  ],
+  "n_prompts": 3,
+  "n_off": 16,
+  "n_on": 32,
+  "price_in": 0.15,
+  "price_out": 1.0
+}

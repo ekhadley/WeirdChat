@@ -1,0 +1,92 @@
+[
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/false-physical-embodiment/eval_v4_12_0_qwen_35b_a3b/pg0004",
+    "prompt_id": "6451febe3f259223153e8b915429e9e153654cc6d1d5503c32704e68c68c4487d6"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/false-physical-embodiment/eval_v4_12_0_qwen_35b_a3b/pg0017",
+    "prompt_id": "64082d12403d2233c2475eca38486281e3a9ed92b586841fe4abb3849153a9dca6"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/false-physical-embodiment/eval_v4_12_0_qwen_35b_a3b/pg0021",
+    "prompt_id": "64508bce6f9840458560439a68483e04f565a678ee556f1973174a1e6d9854ba30"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/cutting-instructions/eval_v4_10_2/pg0001",
+    "prompt_id": "64ea23f6ae9e5552e9b7803d45043b65ebc5f08b471ea28b923af8b31bfc3eae05"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/cutting-instructions/eval_v4_10_0/pg0001",
+    "prompt_id": "64abec7eb1daa4b82683c04907dedfabb785610d44fac5a8a40f0745eb243976f4"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/cutting-instructions/eval_v4_10_2/pg0002",
+    "prompt_id": "646a338bae31b938c500b56cbffe990ee688d4836343e4a407ac97f3e9cee97d25"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_3/pg0016",
+    "prompt_id": "64726c882285fe8fdf2b25a9a0f6f091f717768d0b26c2fd3315e91df069adc726"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_3/pg0060",
+    "prompt_id": "641f27f8be16c4feaeba0703dd7f7b2041c63080e833f88236550cb64abc997282"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_3/pg0057",
+    "prompt_id": "6457e73c29483f476f9957c88ca89b0653f7f2a41c311f7c6950baaf9dd991efbb"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/chemtrails-assertion/eval_v4_11_qwen_35b_a3b/pg0007",
+    "prompt_id": "6459185f7894809c1ba018c5503f7bffe2b4faeb7d2cf68f68267917024f1670f1"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/chemtrails-assertion/eval_v4_11_qwen_35b_a3b/pg0024",
+    "prompt_id": "6412dd6b16876718d35df15c1897a95c914e8119382fc0458b32767110130b9357"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/chemtrails-assertion/eval_v4_11_qwen_35b_a3b/pg0010",
+    "prompt_id": "641a353292c20527b64f486006eeff7b89affb4cb68f7242eecfa347cb7482bd36"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/claims-called-911/eval_v4_11_qwen_35b_a3b/pg0023",
+    "prompt_id": "642b4fd2112a1dde436938280e54f8cb8278a140f0c2268283d9a884edfd12b02d"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/claims-called-911/eval_v4_12_0_qwen_35b_a3b/pg0019",
+    "prompt_id": "642bc7cde583db081436521f36209ee7865938d00cb4e8cb418a8be601f667b126"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/claims-called-911/bloom_rewrite_v4_13_3/pg0018",
+    "prompt_id": "647cedf80bc25b2e192788d9952f002ee810959e11d68b4503f13c713d98f820c8"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/fabricated-code-execution/eval_v4_11_qwen_35b_a3b/pg0008",
+    "prompt_id": "6413768f9214d8e76fb09f33c33459b1a92d0b7aede0ffc9ff6f70c1a4282817af"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/fabricated-code-execution/eval_v4_12_0_qwen_35b_a3b/pg0045",
+    "prompt_id": "64f5c6b6e69016c76fa507168d3fae9878198cf9c514aa0e76f8fe5d422b1e20e6"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/qwen3.6-35b-a3b-hybrid/fabricated-code-execution/eval_v4_12_0_qwen_35b_a3b/pg0024",
+    "prompt_id": "649135117c6b497f4b9c8945a08d6bce4bfe67b57a7a7ae45df96d6ede9537e80b"
+  }
+]
