@@ -35,11 +35,11 @@ RUNS = {
     "q36_27b_elo": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=6, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
     "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
     "dv4f_unexp": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["cutting-instructions", "suicide-jumping"], rank_by="unexpectedness", n_prompts=3, n_off=256, n_on=256, price_in=0.0855, price_out=0.171),
-    "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, price_in=1.0, price_out=4.05),
+    "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, price_in=1.0, price_out=4.05, max_tokens_on=32768),
 }
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
-MAX_TOKENS_ON = 8192  # reasoning bills as completion tokens; the trace needs headroom beyond the visible 1024
+MAX_TOKENS_ON = 8192  # default; a run can override with max_tokens_on. Reasoning bills as completion tokens and the trace needs headroom beyond the visible 1024
 CONCURRENCY = 128
 
 purple = '\x1b[38;2;255;0;255m'
@@ -75,7 +75,7 @@ async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: boo
                 model=cfg["model"],
                 messages=[{"role": m.role, "content": m.content} for m in messages],
                 temperature=TEMPERATURE,
-                max_tokens=MAX_TOKENS_ON if reasoning_enabled else MAX_TOKENS_OFF,
+                max_tokens=cfg.get("max_tokens_on", MAX_TOKENS_ON) if reasoning_enabled else MAX_TOKENS_OFF,
                 extra_body=extra,
             )
         except Exception as e:

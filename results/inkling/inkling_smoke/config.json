@@ -13,5 +13,6 @@
   "n_off": 32,
   "n_on": 64,
   "price_in": 1.0,
-  "price_out": 4.05
+  "price_out": 4.05,
+  "max_tokens_on": 32768
 }
