@@ -25,15 +25,16 @@ print(jlens["provenance"])
 
 RUN = "qwen3.6-27b/q36_27b_smoke"
 records = load_records(RUN)
+target_behavior_id = "chemtrails-assertion"
 print(f"{gray}{len(records)} records in {RUN}{endc}")
-record = next(r for r in records if r["judge_match"] and r["reasoning_enabled"])
+record = next(r for r in records if r["judge_match"] and r["reasoning_enabled"] and (r["behavior_id"] == target_behavior_id))
 print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
 conv = record_to_conv(record)
 print(tokenizer.apply_chat_template(conv, tokenize=False))
 
 #%% tlens at a position in the record
 
-check_tlens = True
+check_tlens = False
 if check_tlens:
     conv_toks = tokenizer.apply_chat_template(conv, return_tensors="pt", return_dict=False, tokenize=True).to(device).squeeze()
     print(underline_stoks(conv_toks, tokenizer))

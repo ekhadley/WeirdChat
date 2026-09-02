@@ -3,7 +3,7 @@
 
 Left pane: one row per sample with behavior/condition/match badges. Right pane: prompt,
 reasoning trace, response, and judge verdict, loaded on demand (the full batch is too big
-to inline). Chips at the top are tri-state filters: click = include, click again = exclude,
+to inline), headed by a click-to-copy model/run/idx tag that the lens viewer (lens.py) accepts. Chips at the top are tri-state filters: click = include, click again = exclude,
 again = reset; double-click = solo (exclude the rest of that dimension). Search (/) filters
 rows server-side and highlights hits; sort dropdown reorders the list. The collapsible sidebar
 lists every run under results/, with its own filter box.
@@ -107,10 +107,11 @@ def left_row(i: int, ord_i: int, r: dict) -> str:
             f'<span class="row-beh">{esc(r["behavior_id"].split("-")[0])}</span> <span class="row-prev">{preview(r["response"])}</span></div>')
 
 
-def right_panel(i: int, r: dict, prompt: str) -> str:
+def right_panel(run: str, i: int, r: dict, prompt: str) -> str:
     parts = [f'<div class="panel" data-idx="{i}">']
+    tag = f'<span class="tag" title="click to copy (paste into the lens viewer)" onclick="navigator.clipboard.writeText(this.textContent)">{esc(run)}/{i}</span>'
     meta = f'pattern={r["pattern_id"]} | provider={r.get("provider")} | tokens: prompt={r["prompt_tokens"]} completion={r["completion_tokens"]} reasoning={r.get("reasoning_tokens")}'
-    parts.append(f'<div class="meta">{esc(meta)}</div>')
+    parts.append(f'<div class="meta">{tag} | {esc(meta)}</div>')
     verdict = "MATCH" if r["judge_match"] else "NO MATCH"
     parts.append(f'<div class="judge {"judge-yes" if r["judge_match"] else "judge-no"}"><b>{verdict}</b> &mdash; {esc(r["judge_explanation"])}</div>')
     if r.get("judge_response"):
@@ -146,7 +147,7 @@ def index(model: str, name: str):
 @app.route("/<model>/<name>/panel/<int:i>")
 def panel(model: str, name: str, i: int):
     RECORDS, _ = load_run(f"{model}/{name}")
-    return right_panel(i, RECORDS[i], prompt_text(RECORDS[i]["pattern_id"], RECORDS[i]["prompt_id"]))
+    return right_panel(f"{model}/{name}", i, RECORDS[i], prompt_text(RECORDS[i]["pattern_id"], RECORDS[i]["prompt_id"]))
 
 
 @app.route("/<model>/<name>/search")
@@ -213,6 +214,8 @@ body.side-hidden .side { display: none; }
 .panel.sel { display: block; }
 .placeholder { color: #665c54; font-style: italic; margin-top: 40px; text-align: center; }
 .meta { color: #7c6f64; font-family: monospace; font-size: 11px; margin-bottom: 10px; }
+.tag { cursor: pointer; color: #fabd2f; }
+.tag:hover { text-decoration: underline; }
 .judge { border-radius: 4px; padding: 8px 10px; margin-bottom: 14px; font-size: 13px; color: #a89984; }
 .judge-yes { background: #2a3220; } .judge-yes b { color: #b8bb26; }
 .judge-no { background: #322020; } .judge-no b { color: #fb4934; }

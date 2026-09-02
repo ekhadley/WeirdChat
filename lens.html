@@ -2,17 +2,6 @@
 <style>
 html, body { height: 100%; }
 body { background: #16161e; color: #d4d4dc; font-family: monospace; font-size: 14px; margin: 0; padding: 12px 18px; box-sizing: border-box; display: flex; flex-direction: row; gap: 20px; overflow: hidden; }
-#side { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
-#side select, #side input { width: 100%; box-sizing: border-box; padding: 5px; }
-select { background: #1e1e28; color: #d4d4dc; border: 1px solid #3a3a4a; font-family: monospace; font-size: 13px; }
-#records { flex: 1; overflow-y: auto; border: 1px solid #3a3a4a; }
-.rec { padding: 4px 6px; cursor: pointer; border-bottom: 1px solid #22222e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-.rec:hover { background: #22222e; }
-.rec.sel { background: #2a2a3a; }
-.rec .b { font-size: 10px; font-weight: bold; padding: 0 4px; margin-right: 3px; border-radius: 3px; }
-.b.on { background: #3c2a3a; color: #d3869b; } .b.off { background: #2a2a34; color: #888; }
-.b.match { background: #3d4220; color: #b8bb26; } .b.nomatch { background: #26262f; color: #666; }
-.rec .beh { color: #83a598; } .rec .prev { color: #888; }
 #right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 #toprow { display: flex; gap: 16px; flex: none; height: 28vh; }
 #inputcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -20,6 +9,7 @@ textarea { width: 100%; flex: 1; min-height: 90px; background: #1e1e28; color: #
 button { background: #2a2a3a; color: #d4d4dc; border: 1px solid #4a4a5a; padding: 6px 18px; font-family: monospace; font-size: 14px; cursor: pointer; }
 input { background: #1e1e28; color: #d4d4dc; border: 1px solid #3a3a4a; font-family: monospace; }
 input[type=number] { width: 55px; }
+#tag { width: 100%; box-sizing: border-box; padding: 5px; }
 input[type=range] { width: 45%; min-width: 300px; vertical-align: middle; }
 #strip { flex: 1; min-width: 0; font-size: 17px; line-height: 1.5; overflow-y: auto; }
 .tok { display: inline-block; vertical-align: top; cursor: pointer; }
@@ -48,11 +38,6 @@ tr.pinned td { border-top: 2px solid #4a4a5a; font-weight: bold; }
 #tip { position: fixed; background: #26262f; border: 1px solid #4a4a5a; padding: 5px 10px; font-size: 13px; pointer-events: none; z-index: 10; white-space: pre; }
 </style>
 
-<div id="side">
-    <select id="run" onchange="selectRun()"></select>
-    <input id="recfilter" placeholder="filter records (behavior / text)" oninput="renderRecords()">
-    <div id="records"></div>
-</div>
 <div id="strip"></div>
 <div id="right">
     <div id="toprow">
@@ -63,7 +48,8 @@ tr.pinned td { border-top: 2px solid #4a4a5a; font-weight: bold; }
             <div id="pincands"></div>
         </div>
         <div id="inputcol">
-            <textarea id="text" placeholder="raw prompt text (already templated); pick a record on the left to fill"></textarea>
+            <input id="tag" placeholder="model/run/idx from the rollout viewer, enter to load" onkeydown="if (event.key == 'Enter') loadTag()">
+            <textarea id="text" placeholder="raw prompt text (already templated); paste a record tag above to fill"></textarea>
             <div>
                 <button onclick="run()">run</button>
                 k <input id="k" type="number" value="15">
@@ -79,11 +65,12 @@ tr.pinned td { border-top: 2px solid #4a4a5a; font-weight: bold; }
 <div id="tip" hidden></div>
 
 <script>
-let data = null, pos = 0, words = [], pinData = [], cands = [], recs = [], selRec = -1;
+let data = null, pos = 0, words = [], pinData = [], cands = [];
 const palette = ["#ff5c5c", "#4cc9f0", "#ffd166", "#9b5de5", "#06d6a0", "#f15bb5", "#fca311", "#8ac926"];
 const $ = id => document.getElementById(id);
 let pins = JSON.parse(localStorage.getItem("pins") || "[]");
 $("text").value = localStorage.getItem("text") || "";
+$("tag").value = localStorage.getItem("tag") || "";
 $("text").oninput = () => localStorage.setItem("text", $("text").value);
 fetch("/words").then(r => r.json()).then(w => { words = w; });
 renderPinList();
@@ -99,36 +86,12 @@ async function post(url, body) {
     return r.json();
 }
 
-// ---- run / record picker ----
-(async () => {
-    const runs = await (await fetch("/runs")).json();
-    $("run").innerHTML = runs.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
-    const saved = localStorage.getItem("run");
-    if (runs.includes(saved)) $("run").value = saved;
-    if (runs.length) selectRun();
-})();
-
-async function selectRun() {
-    const run = $("run").value;
-    localStorage.setItem("run", run);
-    selRec = -1;
-    recs = await (await fetch("/records/" + run)).json();
-    renderRecords();
-}
-
-function renderRecords() {
-    const q = $("recfilter").value.toLowerCase();
-    $("records").innerHTML = recs.map(r => q && !`${r.behavior} ${r.preview}`.toLowerCase().includes(q) ? "" :
-        `<div class="rec${r.i === selRec ? " sel" : ""}" onclick="selectRecord(${r.i})">` +
-        `<span class="b ${r.on ? "on" : "off"}">r=${r.on ? "on" : "off"}</span><span class="b ${r.match ? "match" : "nomatch"}">${r.match ? "MATCH" : "no"}</span>` +
-        `<span class="beh">${esc(r.behavior.split("-")[0])}</span> <span class="prev">${esc(r.preview)}</span></div>`).join("");
-}
-
-async function selectRecord(i) {
-    selRec = i;
-    renderRecords();
+// ---- record tag ----
+async function loadTag() {
+    const tag = $("tag").value.trim();
+    localStorage.setItem("tag", tag);
     $("status").textContent = "templating...";
-    const res = await (await fetch(`/text/${$("run").value}/${i}`)).json();
+    const res = await (await fetch("/text/" + tag)).json();
     $("text").value = res.text;
     localStorage.setItem("text", res.text);
     run();

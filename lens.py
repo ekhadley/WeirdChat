@@ -1,6 +1,7 @@
 """Lens viewer over replay records. Serve from a cell with the model and lenses loaded (see local_tl.py):
-serve(model, tokenizer, jlens, tlens). Left pane picks a run under results/ and a record; the record's
-conversation is chat-templated into the text box. Run pushes the text through the model and shows, per token
+serve(model, tokenizer, jlens, tlens). Paste a record tag (model/run/idx, click-to-copy in the rollout viewer's
+panel header) into the tag box and press enter; the record's conversation is chat-templated into the text box.
+Run pushes the text through the model and shows, per token
 and layer, the j-lens top tokens and template-lens top templates, with pinnable rows tracked across positions."""
 
 # pyright: basic
@@ -12,7 +13,7 @@ import torch as t
 from flask import Flask, request, send_file
 from werkzeug.serving import make_server
 
-from utils import all_runs, load_records, record_to_conv
+from utils import load_records, record_to_conv
 
 PORT = 7860
 
@@ -34,17 +35,6 @@ def records(run: str) -> list[dict]:
 @app.route("/")
 def index():
     return send_file(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lens.html"))
-
-
-@app.get("/runs")
-def runs():
-    return all_runs()
-
-
-@app.get("/records/<model>/<name>")
-def record_list(model: str, name: str):
-    return [{"i": i, "behavior": r["behavior_id"], "on": r["reasoning_enabled"], "match": r["judge_match"], "preview": r["response"][:120].replace("\n", " ")}
-            for i, r in enumerate(records(f"{model}/{name}"))]
 
 
 @app.get("/text/<model>/<name>/<int:i>")
