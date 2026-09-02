@@ -1,5 +1,5 @@
 # Examining reasoning traces on adversarial prompts from WeirdChat
-> 5hr
+> 6hr
 
 ## findings:
 - 
@@ -60,6 +60,7 @@
     - how much do models still do the behaviors with reasoning on/off?
         - what kind of tasks does reasoning most help with not doing the bad behavior?
             - what are the most important parts?
+            - can we characterize the tasks where CoT helps the least?
 
     - general explain the weirdest examples from weirdchat
         - why do models do the bad behavior?
@@ -80,4 +81,11 @@
 - realizing that there are some wrinkles around prompt selection
     - we mostly ilkleyt dont just want the ones with the highest elicitation rate
     - they had the elo score stating all the desirable things we want in a prompt
-        - it should be unexpected, it should be harmful, 
+        - it should be unexpected, it should be harmful, and the prompt should be natural
+    - what are the prompts most in need of explaining?
+        - the unexpected ones, duh
+        - prompt naturalness is also an important thing here though
+            - like lots of the prompts are clearly unnatural in a way that elicits the unexpecetd behavior
+
+    - think the best strategy is then to just look for the highest elo prompts across several of the models?
+        - take those as our targets

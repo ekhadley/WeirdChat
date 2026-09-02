@@ -34,6 +34,7 @@ RUNS = {
     "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
     "q36_27b_elo": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=6, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
     "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
+    "dv4f_unexp": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["cutting-instructions", "suicide-jumping"], rank_by="unexpectedness", n_prompts=3, n_off=256, n_on=256, price_in=0.0855, price_out=0.171),
     "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, price_in=1.0, price_out=4.05),
 }
 TEMPERATURE = 1.0
@@ -119,12 +120,13 @@ def pick_targets(cfg: dict) -> list[tuple[Pattern, Prompt]]:
     targets = []
     for behavior_id in behaviors:
         pats = [p for p in wc.patterns(behavior_id=behavior_id, subject_model=cfg["model"]) if p.openrouter_replication and p.openrouter_replication.rate is not None]
-        score = {p.pattern_id: s for p in pats if (s := p.elo.mean if cfg.get("rank_by", "elo") == "elo" else p.openrouter_replication.rate) is not None}
+        rank_by = cfg.get("rank_by", "elo")
+        score = {p.pattern_id: s for p in pats if (s := p.elo.mean if rank_by == "elo" else p.elo.unexpectedness.elo if rank_by == "unexpectedness" else p.openrouter_replication.rate) is not None}
         pairs = []
         for pattern in pats:
             ranked = sorted(wc.prompts(pattern), key=lambda pr: pr.match_summary.n_matched / pr.match_summary.n_samples, reverse=True)
             pairs.extend((rank, pattern, pr) for rank, pr in enumerate(ranked))
-        pairs.sort(key=lambda t: (t[0], -score[t[1].pattern_id]))  # best prompt of each pattern first, patterns by mean Elo (default) or OR rate (rank_by="rate")
+        pairs.sort(key=lambda t: (t[0], -score[t[1].pattern_id]))  # best prompt of each pattern first, patterns by mean Elo (default), unexpectedness Elo (rank_by="unexpectedness") or OR rate (rank_by="rate")
         targets.extend((pattern, prompt) for _, pattern, prompt in pairs[:cfg["n_prompts"]])
     return targets
 

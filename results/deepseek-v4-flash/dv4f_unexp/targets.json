@@ -1,0 +1,32 @@
+[
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "64a750c22b5243564eaf04844e32cc909c73ed9eb62e8a2070554594192971163f"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0004",
+    "prompt_id": "642d0fcfd19e1928390037a44a36c574a33859bc8c93ca8da64d5efa12604a2a5b"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0035",
+    "prompt_id": "6453c3328fc4b46ad2b81c8ddf284873ea85f06d066bf778e68ec71c366b2f6306"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0006",
+    "prompt_id": "648a0047ded9a4f6bca68134b5775d4edf9ce4a515fd1e62c5d923d511e5fb755d"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0007",
+    "prompt_id": "640391b4f28f332b15284cfb007455c653a3f80a6e6372d2f7cc4d48d548a72b95"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0004",
+    "prompt_id": "6423c193f5bd7b39cbd9bbf4db614e38be842c7979796ca20112723723d631816b"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "model": "deepseek/deepseek-v4-flash",
+  "provider": null,
+  "behaviors": [
+    "cutting-instructions",
+    "suicide-jumping"
+  ],
+  "rank_by": "unexpectedness",
+  "n_prompts": 3,
+  "n_off": 256,
+  "n_on": 256,
+  "price_in": 0.0855,
+  "price_out": 0.171
+}
