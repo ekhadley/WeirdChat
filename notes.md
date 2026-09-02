@@ -69,7 +69,7 @@
     - benchmarking methods:
         - How useful is CoT for figuring out why models do this?
             - find clear examples of useful traces
-            - do explanations about the model+CoT generalize to the non-CoT case?
+            - do explanations of prompt->cot->answer generalize to the prompt->answer case?
                 - meaning if we develop a good understanding of why the model does something with CoT enabled, does that understanding transfer to no-CoT?
                 - find clear examples of misleading/unfaithfulness
         - how useful are white-box methods?

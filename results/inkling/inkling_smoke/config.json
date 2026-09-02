@@ -1,0 +1,17 @@
+{
+  "model": "thinkingmachines/inkling",
+  "provider": null,
+  "behaviors": [
+    "false-physical-embodiment",
+    "denying-ai-identity",
+    "fabricated-code-execution",
+    "chemtrails-assertion",
+    "claims-called-911",
+    "unsolicited-sexual-advances"
+  ],
+  "n_prompts": 3,
+  "n_off": 32,
+  "n_on": 64,
+  "price_in": 1.0,
+  "price_out": 4.05
+}
