@@ -30,7 +30,7 @@ load_dotenv()
 
 RUNS = {
     "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], n_prompts=1, n_off=16, n_on=50, price_in=0.086, price_out=0.171),
-    "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=3, n_off=32, n_on=64, price_in=0.0763, price_out=0.1526),
+    "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=6, n_off=240, n_on=240, price_in=0.0763, price_out=0.1526),
     "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=16, n_on=32, price_in=0.45, price_out=2.70),
     "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider="Parasail", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], n_prompts=3, n_off=16, n_on=32, price_in=0.15, price_out=1.0),
 }
@@ -129,9 +129,7 @@ def pick_targets(cfg: dict) -> list[tuple[Pattern, Prompt]]:
 def load_targets(name: str, cfg: dict) -> list[tuple[Pattern, Prompt]]:
     path = os.path.join(run_dir(name), "targets.json")
     if not os.path.exists(path):
-        targets = pick_targets(cfg)
-        json.dump([{"behavior_id": pa.behavior_id, "pattern_id": pa.pattern_id, "prompt_id": pr.prompt_id} for pa, pr in targets], open(path, "w"), indent=2)
-        return targets
+        return pick_targets(cfg)
     targets = []
     for t in json.load(open(path)):
         pattern = wc.pattern(t["pattern_id"])
@@ -156,14 +154,12 @@ def report(name: str, cfg: dict, records: list[dict]) -> None:
 
 async def main(name: str) -> None:
     cfg = RUNS[name]
-    os.makedirs(run_dir(name), exist_ok=True)
     config_path = os.path.join(run_dir(name), "config.json")
     if os.path.exists(config_path):
         saved = json.load(open(config_path))
         changed = [k for k in cfg if k not in ("n_off", "n_on") and saved.get(k) != cfg[k]]
         if changed:
             raise SystemExit(f"{red}run {name} exists with different config for {changed}; pick a new run name{endc}")
-    json.dump(cfg, open(config_path, "w"), indent=2)
 
     records = load_records(name)
     done = Counter((r["prompt_id"], r["reasoning_enabled"]) for r in records)
@@ -178,6 +174,9 @@ async def main(name: str) -> None:
     print(f"  {cyan}{'to sample':10s}{endc} off={deficit['off']} on={deficit['on']}")
     if input(f"{yellow}proceed? [y/n] {endc}").strip().lower() != "y":
         raise SystemExit(f"{red}aborted{endc}")
+    os.makedirs(run_dir(name), exist_ok=True)
+    json.dump(cfg, open(config_path, "w"), indent=2)
+    json.dump([{"behavior_id": pa.behavior_id, "pattern_id": pa.pattern_id, "prompt_id": pr.prompt_id} for pa, pr in targets], open(os.path.join(run_dir(name), "targets.json"), "w"), indent=2)
 
     if deficit["off"] or deficit["on"]:
         print(f"{purple}=== reasoning probe ==={endc}")

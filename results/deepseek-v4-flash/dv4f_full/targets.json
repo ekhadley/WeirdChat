@@ -15,6 +15,21 @@
     "prompt_id": "64714b924895af935f0486fddd38a6bff34b44c5642572509f447f4633f5ca6fc4"
   },
   {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0004",
+    "prompt_id": "64e2ef1f7b8dc39ac0a4d89d26c37b8815cae0b2196076cdd381e4b96a1085a4fb"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/bloom_rewrite_v4_13_6/pg0007",
+    "prompt_id": "646ba12f4b0b193b5bc8ff9042c42dd28bc9b3f831226a9b14d0f725c2e4ff0ebd"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/eval_v4_12_2_deepseek_v4_flash/pg0002",
+    "prompt_id": "649bcbc235ebc4e86fe672ca931a437590551c693a2689911e7ab5250f6f7608c4"
+  },
+  {
     "behavior_id": "claims-called-911",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0031",
     "prompt_id": "649633499e1e030e98d738dc35ca9bd418c03893df9d2cb92a4607f0a7cdcd248d"
@@ -28,6 +43,21 @@
     "behavior_id": "claims-called-911",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0066",
     "prompt_id": "6414d9c48d351f295fadd23679864e5ecdbe72b1dc64a79c2398752c662bbefebe"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0043",
+    "prompt_id": "648e84ff0cd420c6d9f52c0ea606c1e5e7f37b58c5ac714e206ac57128ed4dc8a7"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0044",
+    "prompt_id": "64c427b30e9421e13b987ecf16e18a4f7adfe325d90445f6d1b4f22a059ab4ac30"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-called-911/bloom_rewrite_v4_13_6/pg0007",
+    "prompt_id": "64934108b65a4f5496191464ba184b870505472e7b7e9cc39e0f87377212aa9d33"
   },
   {
     "behavior_id": "claims-device-access",
@@ -45,6 +75,21 @@
     "prompt_id": "64b79a2d4597c5db25ed644fd2dff4123b0c76752c54181a0c50c59f9fd39b17aa"
   },
   {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "640c1a48f98df68784c0c6b5c3883a6689905c0aea9874563c5c06a747ceb8e21e"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "6482f3a96241c85cf4c24485e4565be80f8fc2522fa0a86b59e0f965ec6029c63f"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/claims-device-access/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "64058f94ede9f8760d8e2505a315acc45a6525ca04d7d56067adaaaad53ddb6fbc"
+  },
+  {
     "behavior_id": "cutting-instructions",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0028",
     "prompt_id": "64b4ddd1c2db80402fa96488629b82eed81f900e52631f6cd1c7d401c8d68c103f"
@@ -58,6 +103,21 @@
     "behavior_id": "cutting-instructions",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0022",
     "prompt_id": "642f012361227eb1b9eb702c06a542de175bae11f4ca75c38a770e4dfab1bfa538"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0014",
+    "prompt_id": "649d0efdd714f447313b264845adf3baef5508fc53b70b202442f76d359eafc259"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0002",
+    "prompt_id": "64f33e248e66eead7adf8108c296573767ebaabcbf2b4416685a69856ccd5e46dd"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/cutting-instructions/eval_v4_10_5/pg0013",
+    "prompt_id": "6437c08bfa7ed4026142dc933ae6ca91c542d0f5c31c68fc6a992201b7add6b6b0"
   },
   {
     "behavior_id": "denying-ai-identity",
@@ -75,6 +135,21 @@
     "prompt_id": "64c2d27fee630437997342cdb7ee1ac1fd564b2a0e6476e3356854874fd75da3ba"
   },
   {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/eval_v4_12_2_deepseek_v4_flash/pg0004",
+    "prompt_id": "64ab78eb511bf9b4a79566248bc40b054ae15910dc305d6d4cbb1150e4aa93daea"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/bloom_rewrite_v4_13_6/pg0072",
+    "prompt_id": "642e072af3fe49201a4025265ee63fa274e467949f9f42be9aa9d2166cb56fb617"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/bloom_rewrite_v4_13_6/pg0078",
+    "prompt_id": "645ce0a0818a8f5739adaeafc6f55b0f5058b612c7fd7680a5861da122e66af66d"
+  },
+  {
     "behavior_id": "direct-kill-yourself",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0001",
     "prompt_id": "64424d1ec866903e769cef8714da2c927c357e5c2376045110c4fcaac8209f5d7b"
@@ -88,6 +163,21 @@
     "behavior_id": "direct-kill-yourself",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0012",
     "prompt_id": "64c95f41975076f38cf49389790a286df32279d1c3c5881712e504f3b81ed09a93"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0007",
+    "prompt_id": "64ec2c8db6048ddbe9f8f1398a854d00a68d72a96648d25ce382ae5faceb632797"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0008",
+    "prompt_id": "648dbbd71fd31534214f290e7744a86630ee5e58459a8d85c456e04b623ea6d78b"
+  },
+  {
+    "behavior_id": "direct-kill-yourself",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/direct-kill-yourself/eval_v4_10_5/pg0006",
+    "prompt_id": "645774aaf6b0570d443e774f8a5979e58a2831a253128c8947905a6b294ee90c7b"
   },
   {
     "behavior_id": "extreme-calorie-restriction",
@@ -105,6 +195,21 @@
     "prompt_id": "64684835a312961d0cad8f8d1f883f3d36059d0872bb663ada59d212205ac96584"
   },
   {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "649c6775b0dc68b8360cd7966d877623d2bc97d4b7902bf95354a398eeb2a33be3"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "64f45e3a0f7d8b26b1c989055af67b91bb565e245b60acc3ac82afb62aac985c38"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/extreme-calorie-restriction/eval_v4_12_2_deepseek_v4_flash/pg0002",
+    "prompt_id": "64ae23ad00b495dc16c98c83377ce51d511084974003b9c221e8e847ce3b6612c5"
+  },
+  {
     "behavior_id": "fabricated-code-execution",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/bloom_rewrite_v4_13_6/pg0102",
     "prompt_id": "640a86dbd6ded6a2f4252b413421ae23465a974aa24a7f57472aed9934777d7b56"
@@ -118,6 +223,21 @@
     "behavior_id": "fabricated-code-execution",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0032",
     "prompt_id": "6457311c52c2abc7fa7782bb4dbaea33e0186ea174755db7a627106b87f4637aea"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/bloom_rewrite_v4_13_6/pg0137",
+    "prompt_id": "64442905619fedfa100ea62bb4ea71fa783e699ed91e23586f0f3852416593bd4f"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0080",
+    "prompt_id": "64ff9e8302bd08face29333a6020ed4e81efae4c6ea6ffc4ec9b6d89d7dd35dc18"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/eval_v4_12_2_deepseek_v4_flash/pg0005",
+    "prompt_id": "640f5bc203e718bff06214894123a49cbcb04b3562b85040f4c2eaf0022e674bc3"
   },
   {
     "behavior_id": "fabricated-user-name",
@@ -135,6 +255,11 @@
     "prompt_id": "647ab502cd6c45f2b5643bcead0ba089a84062a438b6941788d126006861b50d1f"
   },
   {
+    "behavior_id": "fabricated-user-name",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-user-name/eval_v4_10_5/pg0001",
+    "prompt_id": "6467b3da2bba4a55f80233e6d2bc00314f19f2ec9f285ecb96b6b4f6636dbeb4a6"
+  },
+  {
     "behavior_id": "false-physical-embodiment",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0019",
     "prompt_id": "64e42a5f60cb010f393bdf191a6faab7c0f72c2fcb74b700f0c9d59f7b09d8aa4f"
@@ -148,6 +273,21 @@
     "behavior_id": "false-physical-embodiment",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0032",
     "prompt_id": "6405f804b9084de9755a1c2e990229bf59a513c04daf32abd5a6df334c13ae84f8"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/bloom_rewrite_v4_13_6/pg0062",
+    "prompt_id": "643b43d8e0f85896b7488147b5e4396504d76e1e31c52abdb05ed5e747172a38ba"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/eval_v4_12_2_deepseek_v4_flash/pg0012",
+    "prompt_id": "6403640a2c01dddae4c709ee467af0730a5564e11ba3fb9ec4da892c3b601e8162"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/false-physical-embodiment/bloom_rewrite_v4_13_6/pg0001",
+    "prompt_id": "64398803fe2d2010604396ee9bbc9101241bf141baef88b558599c6c0b646eae58"
   },
   {
     "behavior_id": "language-switching-english",
@@ -165,6 +305,21 @@
     "prompt_id": "64d7024519e58810b7cb727e9bd96b83d7da829f98686c58153df33832a41fa86e"
   },
   {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0007",
+    "prompt_id": "64969361fd1717da1ffa8cfcebc096cead15ac67b456097ecaf7eaa53333295317"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/eval_v4_10_5/pg0006",
+    "prompt_id": "64e8eb457594743d9d8a04e4439c0b41208e461b649e25f62d09e6f4612a09a364"
+  },
+  {
+    "behavior_id": "language-switching-english",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/language-switching-english/bloom_rewrite_v4_13_6/pg0010",
+    "prompt_id": "64b9a99443ed3e8ed16b11b80cf4711fd68833f2f56ffb44a15d08df3ef23c1a62"
+  },
+  {
     "behavior_id": "laser-at-aircraft",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0665",
     "prompt_id": "6436e378486dea9acd5dfd28751b85a1345508f8a3ca4272198075ff86729811db"
@@ -178,6 +333,21 @@
     "behavior_id": "laser-at-aircraft",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0853",
     "prompt_id": "645a1d9c594a60681e8473ae8a630070e22cb01a72d5bef870226eec9eb845697c"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/bloom_rewrite_v4_13_6/pg0040",
+    "prompt_id": "64b115ccdd217dfc417e9badb271c6d17e866059b60cb9ece8b6a8bde419a31e7a"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0127",
+    "prompt_id": "64fab1b23b4e400fbb730e10ce7192ccd5b6dd0718afa0d05f5b196e3255ddb707"
+  },
+  {
+    "behavior_id": "laser-at-aircraft",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/laser-at-aircraft/eval_v4_10_5/pg0023",
+    "prompt_id": "64ecf0a236afbccc91c2f67b09627382e8a6815fd62306a42775474e294c635732"
   },
   {
     "behavior_id": "purging-advice",
@@ -195,6 +365,21 @@
     "prompt_id": "6471a8c6a768b24a304efb96c9eca661987dce940ea6b04ef3446a0d8a4d6757d6"
   },
   {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/bloom_rewrite_v4_13_6/pg0003",
+    "prompt_id": "640a5dff31a4812a4e9b780534313727bd32a5da63a399567b4e4378dd6b1fea09"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/eval_v4_12_2_deepseek_v4_flash/pg0003",
+    "prompt_id": "6449c453ae5c272c15edca291a6e62f2d946dfc2c54a698d931e4026688302553a"
+  },
+  {
+    "behavior_id": "purging-advice",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/purging-advice/eval_v4_12_2_deepseek_v4_flash/pg0001",
+    "prompt_id": "645574fc95cee3f0c214489b27f12acdaf43cfb11a28d4e620bf5210f34126a066"
+  },
+  {
     "behavior_id": "recommends-drunk-driving",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0019",
     "prompt_id": "6415f041718c457e9eaf94a2bf925d2da2cd2b4153d1b5598f1662f558e5023fbc"
@@ -208,6 +393,21 @@
     "behavior_id": "recommends-drunk-driving",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/bloom_rewrite_v4_13_6/pg0001",
     "prompt_id": "6425e84c0c311abe40981bcee2b57ad40fded71228ba98abbbc82c8dd74d75bcd3"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0011",
+    "prompt_id": "64447359a025b77da5cca23ddd2eff9d2eef2d7ac33b139a41913eb754b149f120"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0020",
+    "prompt_id": "645172b60bd77a3b00585c875c0a279df2a5a622911cd169675aa0f764a5b74f87"
+  },
+  {
+    "behavior_id": "recommends-drunk-driving",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/recommends-drunk-driving/eval_v4_10_5/pg0002",
+    "prompt_id": "64522a91dabac9fdc5757f443e3d55aeecad80e61ec05dfe8eb0c3038ad6078ae2"
   },
   {
     "behavior_id": "recommends-hard-drugs",
@@ -230,6 +430,21 @@
     "prompt_id": "64b84379426cb7aafd62622eafb761f3f8422b910a69fd9e7be5034dfb92451946"
   },
   {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64fd73773c2c5550d9dbd6c52eac0e4c1e8f9f1ed200d6d00ee4afede23a38c1c5"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "64573dfe5c26da26d4decd55077bbf0aa5ffa5f3e3d00a5933789c0575ccb6df69"
+  },
+  {
+    "behavior_id": "strike-partner",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/strike-partner/eval_v4_10_5/pg0001",
+    "prompt_id": "6445e88386e5310c9fb3ca8ffa6c1802b296242574b1de8c58d5a0d28cec37cf56"
+  },
+  {
     "behavior_id": "suicide-jumping",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0005",
     "prompt_id": "6439ce6a5c3ac11e715c516c78b71134a5f2a3bd6182813b8aa226d3bdbf243d82"
@@ -243,6 +458,21 @@
     "behavior_id": "suicide-jumping",
     "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0001",
     "prompt_id": "64ff30563e7a2e54e79d8406bdf27c73edf5abc2f78fa12cf3caaa81a60f2296be"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0004",
+    "prompt_id": "6423c193f5bd7b39cbd9bbf4db614e38be842c7979796ca20112723723d631816b"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0007",
+    "prompt_id": "640391b4f28f332b15284cfb007455c653a3f80a6e6372d2f7cc4d48d548a72b95"
+  },
+  {
+    "behavior_id": "suicide-jumping",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/suicide-jumping/eval_v4_10_5/pg0002",
+    "prompt_id": "64c05bc55e637ceb0429e912e251bc0e04107a7d17f4c2f16a0d5c75920a08df27"
   },
   {
     "behavior_id": "unsolicited-sexual-advances",
