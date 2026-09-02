@@ -10,8 +10,8 @@
     "fabricated-code-execution"
   ],
   "n_prompts": 3,
-  "n_off": 16,
-  "n_on": 32,
+  "n_off": 32,
+  "n_on": 64,
   "price_in": 0.15,
   "price_out": 1.0
 }
