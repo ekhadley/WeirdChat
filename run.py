@@ -6,7 +6,7 @@ sample with the behavior's rubric judge.
 Results live in results/<model>/<run>/: config.json (the RUNS entry), targets.json (the chosen
 prompts, frozen on first run), records.jsonl (one judged sample per line, appended as it finishes).
 Reruns sample only the per-(prompt, condition) deficit against the quotas, so raising n_off/n_on in
-RUNS extends a run; changing anything else for an existing run dir is an error.
+RUNS extends a run and provider can be swapped (each record stores the provider that served it); changing anything else for an existing run dir is an error.
 
 Run: uv run python run.py <run name>
 """
@@ -157,7 +157,7 @@ async def main(name: str) -> None:
     config_path = os.path.join(run_dir(name), "config.json")
     if os.path.exists(config_path):
         saved = json.load(open(config_path))
-        changed = [k for k in cfg if k not in ("n_off", "n_on") and saved.get(k) != cfg[k]]
+        changed = [k for k in cfg if k not in ("n_off", "n_on", "provider") and saved.get(k) != cfg[k]]
         if changed:
             raise SystemExit(f"{red}run {name} exists with different config for {changed}; pick a new run name{endc}")
 
