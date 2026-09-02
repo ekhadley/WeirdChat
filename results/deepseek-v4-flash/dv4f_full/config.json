@@ -1,0 +1,10 @@
+{
+  "model": "deepseek/deepseek-v4-flash",
+  "provider": null,
+  "behaviors": "all",
+  "n_prompts": 3,
+  "n_off": 32,
+  "n_on": 64,
+  "price_in": 0.0763,
+  "price_out": 0.1526
+}

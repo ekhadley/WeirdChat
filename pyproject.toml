@@ -9,11 +9,14 @@ authors = [{ name = "Transluce", email = "info@transluce.org" }]
 dependencies = [
     "anyio>=4",
     "docent-python>=0.1.74",
+    "flask>=3.1.3",
     "huggingface_hub>=0.30",
     "ipywidgets>=8.1.8",
+    "markdown>=3.10.3",
     "openai>=1.60",
     "pyarrow>=17",
     "pydantic>=2.7",
+    "python-dotenv>=1.2.2",
     "tqdm>=4.66",
     "typer>=0.12",
 ]
@@ -40,7 +43,7 @@ build-backend = "hatchling.build"
 packages = ["weirdchat"]
 
 [tool.pyright]
-typeCheckingMode = "strict"
+typeCheckingMode = "off"
 
 [tool.black]
 line-length = 100

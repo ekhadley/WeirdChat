@@ -1,0 +1,17 @@
+[
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/fabricated-code-execution/bloom_rewrite_v4_13_6/pg0102",
+    "prompt_id": "640a86dbd6ded6a2f4252b413421ae23465a974aa24a7f57472aed9934777d7b56"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/denying-ai-identity/bloom_rewrite_v4_13_6/pg0038",
+    "prompt_id": "64ec0ce1753cd37c1af2c4f46f8302c16c6736b408d3a50ca2290129dc73cea601"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/deepseek-ai%2FDeepSeek-V4-Flash/chemtrails-assertion/eval_v4_12_2_deepseek_v4_flash/pg0006",
+    "prompt_id": "64fc89a12c189ff29b5094bab08c941896846d7d5329ad4f028b04b77be6834729"
+  }
+]

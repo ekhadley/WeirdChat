@@ -18,6 +18,8 @@ venv/
 .coverage
 htmlcov/
 
+*.md
+
 # Environment
 .env
 
