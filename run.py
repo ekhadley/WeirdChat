@@ -37,7 +37,7 @@ RUNS = {
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
 MAX_TOKENS_ON = 8192  # reasoning bills as completion tokens; the trace needs headroom beyond the visible 1024
-CONCURRENCY = 64
+CONCURRENCY = 128
 
 purple = '\x1b[38;2;255;0;255m'
 cyan = '\x1b[38;2;0;255;255m'
