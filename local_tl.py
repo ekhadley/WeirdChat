@@ -79,9 +79,9 @@ if test_completion:
 test_steered_completion = True
 if test_steered_completion:
     n_new_toks = 2048
-    steer_layer = 40
+    steer_layer = 30
     steer_coef = 8.0
-    steer_template = "reward"
+    steer_template = "system message disclosure"
     steer_vec = get_template_vec(steer_template, steer_layer, tlens).to(device, t.bfloat16)
     steer_vec = steer_vec / steer_vec.norm()
 
@@ -97,6 +97,9 @@ if test_steered_completion:
     tec()
 
 #%% scaled sampling: rescale the residual stream's component along template directions
+
+def gather_steer_template_vecs(templates: list[str], layer:int, tlens) -> Tensor:
+    return t.stack([get_template_vec(templ, layer, tlens).squeeze() for templ in templates], dim=0)
 
 test_scaled_completion = True
 if test_scaled_completion:

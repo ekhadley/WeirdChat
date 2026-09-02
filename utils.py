@@ -6,20 +6,22 @@ and record -> chat-template conversion for the replay runs under results/."""
 import glob
 import json
 
-import IPython
 import torch as t
+from torch import Tensor
+
+import IPython
 from huggingface_hub import hf_hub_download
 from safetensors import safe_open
 from tabulate import tabulate
-from torch import Tensor
 from transformer_lens.model_bridge import TransformerBridge
+
 
 import weirdchat as wc
 
-IPYTHON = IPython.get_ipython()
-if IPYTHON is not None:
-    IPYTHON.run_line_magic("load_ext", "autoreload")
-    IPYTHON.run_line_magic("autoreload", "2")
+# IPYTHON = IPython.get_ipython()
+# if IPYTHON is not None:
+#     IPYTHON.run_line_magic("load_ext", "autoreload")
+#     IPYTHON.run_line_magic("autoreload", "2")
 
 purple = '\x1b[38;2;255;0;255m'
 blue = '\x1b[38;2;0;0;255m'
