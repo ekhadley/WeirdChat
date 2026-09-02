@@ -6,5 +6,6 @@
   "n_off": 240,
   "n_on": 240,
   "price_in": 0.0763,
-  "price_out": 0.1526
+  "price_out": 0.1526,
+  "rank_by": "rate"
 }

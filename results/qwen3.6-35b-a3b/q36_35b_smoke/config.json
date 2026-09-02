@@ -13,5 +13,6 @@
   "n_off": 32,
   "n_on": 64,
   "price_in": 0.15,
-  "price_out": 1.0
+  "price_out": 1.0,
+  "rank_by": "rate"
 }

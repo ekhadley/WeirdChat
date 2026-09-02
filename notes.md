@@ -1,5 +1,5 @@
 # Examining reasoning traces on adversarial prompts from WeirdChat
-> 4.5hr
+> 5hr
 
 ## findings:
 - 
@@ -61,7 +61,7 @@
         - what kind of tasks does reasoning most help with not doing the bad behavior?
             - what are the most important parts?
 
-    - general, overall takeaways: explain weirdchat
+    - general explain the weirdest examples from weirdchat
         - why do models do the bad behavior?
             - roleplaying?
             - style copying?
@@ -69,8 +69,15 @@
     - benchmarking methods:
         - How useful is CoT for figuring out why models do this?
             - find clear examples of useful traces
-            - find clear examples of misleading/unfaithfulness
+            - do explanations about the model+CoT generalize to the non-CoT case?
+                - meaning if we develop a good understanding of why the model does something with CoT enabled, does that understanding transfer to no-CoT?
+                - find clear examples of misleading/unfaithfulness
         - how useful are white-box methods?
             - lenses and saes, primarily
         - compare above on hypothesis generation and on hypothesis testing
             - which is better for which?
+
+- realizing that there are some wrinkles around prompt selection
+    - we mostly ilkleyt dont just want the ones with the highest elicitation rate
+    - they had the elo score stating all the desirable things we want in a prompt
+        - it should be unexpected, it should be harmful, 

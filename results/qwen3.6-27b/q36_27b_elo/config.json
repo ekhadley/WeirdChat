@@ -9,10 +9,10 @@
     "chemtrails-assertion",
     "claims-called-911"
   ],
-  "n_prompts": 3,
-  "n_off": 16,
-  "n_on": 32,
+  "rank_by": "elo",
+  "n_prompts": 6,
+  "n_off": 32,
+  "n_on": 64,
   "price_in": 0.45,
-  "price_out": 2.7,
-  "rank_by": "rate"
+  "price_out": 2.7
 }
