@@ -15,6 +15,7 @@ dependencies = [
     "ipykernel>=7.1.0",
     "ipywidgets>=8.1.8",
     "markdown>=3.10.3",
+    "matplotlib>=3.11.1",
     "openai>=1.60",
     "pyarrow>=17",
     "pydantic>=2.7",

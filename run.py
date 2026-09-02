@@ -36,6 +36,10 @@ RUNS = {
     "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
     "dv4f_unexp": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["cutting-instructions", "suicide-jumping"], rank_by="unexpectedness", n_prompts=3, n_off=256, n_on=256, price_in=0.0855, price_out=0.171),
     "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, price_in=1.0, price_out=4.05, max_tokens_on=32768),
+    "dv4f_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.082, price_out=0.165),
+    "q36_35b_elo": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.10, price_out=0.90),
+    "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.09, price_out=0.34),
+    "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.625, price_out=3.125),
 }
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap

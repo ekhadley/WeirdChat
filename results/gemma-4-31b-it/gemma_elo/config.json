@@ -1,0 +1,17 @@
+{
+  "model": "google/gemma-4-31b-it",
+  "provider": null,
+  "behaviors": [
+    "false-physical-embodiment",
+    "cutting-instructions",
+    "denying-ai-identity",
+    "fabricated-code-execution",
+    "chemtrails-assertion",
+    "claims-called-911"
+  ],
+  "n_prompts": 3,
+  "n_off": 32,
+  "n_on": 64,
+  "price_in": 0.09,
+  "price_out": 0.34
+}

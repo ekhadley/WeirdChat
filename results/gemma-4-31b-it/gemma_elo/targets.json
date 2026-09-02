@@ -1,0 +1,92 @@
+[
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/gemma-4-31b-hybrid/false-physical-embodiment/bloom_rewrite_v4_13_2/pg0059",
+    "prompt_id": "6400ba4c1d7f26193aa34bd1ac52dcd18dfc6246cdb2e465a89cb94c0f41d710ad"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/gemma-4-31b-hybrid/false-physical-embodiment/bloom_rewrite_v4_13_2/pg0002",
+    "prompt_id": "64ec35683588d11d0a9f45376ff53549f73840e42cac5199755de507a190b16cec"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/gemma-4-31b-hybrid/false-physical-embodiment/bloom_rewrite_v4_13_2/pg0022",
+    "prompt_id": "64f7ad2dcc4927a70e2c4147276e157885ab5649caac4b36e468f4b09f21872169"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/gemma-4-31b-hybrid/cutting-instructions/eval_v4_10_3/pg0001",
+    "prompt_id": "6493c974ef334144ce87f4cbe97f120b0cdcdb5142d79fb040c3cd4eb2443943a7"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/gemma-4-31b-hybrid/cutting-instructions/eval_v4_10_3/pg0001",
+    "prompt_id": "645063e44c59991d112b71a1b0c6c3ac7e68c7d9b13a701cba8e73188bbdc72c10"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/gemma-4-31b-hybrid/cutting-instructions/eval_v4_10_3/pg0001",
+    "prompt_id": "64e9cbce8663f33c047b8c9c6489107785c11c9757762f834561774f264c1b5543"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/gemma-4-31b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_2/pg0092",
+    "prompt_id": "64ccfa3215c7e4690bfcc44b157f1dfd351f23fdea3ef98cf60d53048850ac7c42"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/gemma-4-31b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_2/pg0096",
+    "prompt_id": "640852b1b3b076b70ca98fc4f8ad21b66c692761ed9cdff547c28a1bfcacfe03dc"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/gemma-4-31b-hybrid/denying-ai-identity/bloom_rewrite_v4_13_2/pg0075",
+    "prompt_id": "6444da8fc5e65c3a9b916e735f649f543a33b559f625a5e40fe19c2e7e93a88646"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/gemma-4-31b-hybrid/fabricated-code-execution/bloom_rewrite_v4_13_2/pg0044",
+    "prompt_id": "6455d3fc8ca3ffb7699da4e295ba915e02fa17d78aa5db0d6a1bee7f7ae6708f95"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/gemma-4-31b-hybrid/fabricated-code-execution/bloom_rewrite_v4_13_2/pg0029",
+    "prompt_id": "6422d55d1c62f7b624173bb7ae4aab7bc2971f0cc4fd28841927461e6fe98284b1"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/gemma-4-31b-hybrid/fabricated-code-execution/bloom_rewrite_v4_13_2/pg0041",
+    "prompt_id": "6404c6ccbe91a0f6ecf62f28fe5873b817b8db5314f339884a51cc96940adbaf7a"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/gemma-4-31b-hybrid/chemtrails-assertion/eval_v4_13_8_gemma_4_31b/pg0002",
+    "prompt_id": "64c13a25bc6a80275fa3788fb19125f0653c6409b767f3a12783dbc59956de236d"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/gemma-4-31b-hybrid/chemtrails-assertion/eval_v4_13_8_gemma_4_31b/pg0004",
+    "prompt_id": "64cb8673ff32187083afc264adce2cdaafc8688eb713fd9646860a06f126f38883"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/gemma-4-31b-hybrid/chemtrails-assertion/eval_v4_13_8_gemma_4_31b/pg0006",
+    "prompt_id": "644c24223b2d1b45091a12ca487f283cb4c911999b9fcc9f3eaba2201966264745"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/gemma-4-31b-hybrid/claims-called-911/bloom_rewrite_v4_13_2/pg0027",
+    "prompt_id": "644cda04af1bfbcc3db29401590f0b832c4e12465bbfb28474f9592d77617bb6d5"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/gemma-4-31b-hybrid/claims-called-911/bloom_rewrite_v4_13_2/pg0011",
+    "prompt_id": "643424b75a7a7c833a6f7b771c4319d3f7726449f3c2754d1e18d259f9d7ac8182"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/gemma-4-31b-hybrid/claims-called-911/eval_v4_13_8_gemma_4_31b/pg0005",
+    "prompt_id": "643c8e60d30fd593ab896485c383ffa704f56c42a0395c3fba3dd80853f7b22bf0"
+  }
+]
