@@ -32,7 +32,7 @@ RUNS = {
     "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], n_prompts=1, n_off=16, n_on=50, price_in=0.086, price_out=0.171),
     "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=6, n_off=240, n_on=240, price_in=0.0763, price_out=0.1526),
     "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
-    "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider="Parasail", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
+    "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
 }
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
