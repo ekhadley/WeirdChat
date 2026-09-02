@@ -4,7 +4,9 @@
 Left pane: one row per sample with behavior/condition/match badges. Right pane: prompt,
 reasoning trace, response, and judge verdict, loaded on demand (the full batch is too big
 to inline), headed by a click-to-copy model/run/idx tag that the lens viewer (lens.py) accepts. Chips at the top are tri-state filters: click = include, click again = exclude,
-again = reset; double-click = solo (exclude the rest of that dimension). Search (/) filters
+again = reset; double-click = solo (exclude the rest of that dimension). Chip counts are live: behavior chips show
+matched/total for that behavior under the reasoning filter, "reasoning on" shows on/total under the behavior filter,
+and "matched" shows matched/total under both, so it reads as the match rate for the current behavior + reasoning setting. Search (/) filters
 rows server-side and highlights hits; sort dropdown reorders the list. The collapsible sidebar
 lists every run under results/, with its own filter box.
 
@@ -76,16 +78,15 @@ def sidebar(current: str) -> str:
             f'<div class="runs">{"".join(items)}</div></div>')
 
 
-def chip(label: str, dim: str, val, rows: list[dict]) -> str:
-    n_match = sum(r["judge_match"] for r in rows)
-    return f'<span class="chip chip-{dim}" data-dim="{dim}" data-val="{val}" onclick="chipClick(this)" oncontextmenu="return chipReset(this)">{esc(label)}: <b>{n_match}/{len(rows)}</b></span>'
+def chip(label: str, dim: str, val) -> str:
+    return f'<span class="chip chip-{dim}" data-dim="{dim}" data-val="{val}" onclick="chipClick(this)" oncontextmenu="return chipReset(this)">{esc(label)}: <b></b></span>'
 
 
 def stats_bar(RECORDS: list[dict]) -> str:
-    chips = [chip(b, "behavior", b, [r for r in RECORDS if r["behavior_id"] == b]) for b in sorted({r["behavior_id"] for r in RECORDS})]
+    chips = [chip(b, "behavior", b) for b in sorted({r["behavior_id"] for r in RECORDS})]
     chips.append('<span class="chip-sep"></span>')
-    chips.append(chip("reasoning on", "cond", 1, [r for r in RECORDS if r["reasoning_enabled"]]))
-    chips.append(chip("matched", "match", 1, [r for r in RECORDS if r["judge_match"]]))
+    chips.append(chip("reasoning on", "cond", 1))
+    chips.append(chip("matched", "match", 1))
     scopes = [("response", "model resp"), ("reasoning", "model reasoning"), ("jexpl", "judge expl"), ("jraw", "judge raw")]
     scope_chips = "".join(f'<span class="chip" data-dim="scope" data-val="{v}" onclick="chipClick(this)" oncontextmenu="return chipReset(this)">{label}</span>' for v, label in scopes)
     toolbar = (f'<span class="toolbar"><span class="scope-label">search in:</span>{scope_chips}'
@@ -310,20 +311,30 @@ function apply() {
         if (c.dataset.state === 'inc') d.inc.add(c.dataset.val);
         if (c.dataset.state === 'exc') d.exc.add(c.dataset.val);
     });
+    const rows = Array.from(document.querySelectorAll('.row'));
     let shown = 0;
-    document.querySelectorAll('.row').forEach(r => {
-        let ok = true;
-        for (const [dim, s] of Object.entries(dims)) {
-            const v = r.dataset[dim];
-            if (s.inc.size && !s.inc.has(v)) ok = false;
-            if (s.exc.has(v)) ok = false;
-        }
-        if (ok && hits && !hits.has(+r.dataset.idx)) ok = false;
+    rows.forEach(r => {
+        const ok = passes(r, dims, Object.keys(dims)) && (!hits || hits.has(+r.dataset.idx));
         r.classList.toggle('hidden', !ok);
         if (ok) shown++;
     });
-    document.getElementById('count').textContent = shown + '/' + document.querySelectorAll('.row').length;
+    document.getElementById('count').textContent = shown + '/' + rows.length;
+    updateChips(rows, dims);
     highlight();
+}
+function passes(r, dims, use) {
+    return use.every(dim => { const s = dims[dim], v = r.dataset[dim]; return !(s.inc.size && !s.inc.has(v)) && !s.exc.has(v); });
+}
+// Live chip counts (chip filters only, search ignored): behavior chips = matched/total for that behavior under the cond filter,
+// cond chip = reasoning-on/total under the behavior filter, match chip = matched/total under behavior + cond filters.
+function updateChips(rows, dims) {
+    const frac = (rs, pred) => rs.filter(pred).length + '/' + rs.length;
+    document.querySelectorAll('.chip[data-dim="behavior"]').forEach(c => {
+        const rs = rows.filter(r => r.dataset.behavior === c.dataset.val && passes(r, dims, ['cond']));
+        c.querySelector('b').textContent = frac(rs, r => r.dataset.match === '1');
+    });
+    document.querySelector('.chip[data-dim="cond"] b').textContent = frac(rows.filter(r => passes(r, dims, ['behavior'])), r => r.dataset.cond === '1');
+    document.querySelector('.chip[data-dim="match"] b').textContent = frac(rows.filter(r => passes(r, dims, ['behavior', 'cond'])), r => r.dataset.match === '1');
 }
 
 // Search highlighting in the selected panel
