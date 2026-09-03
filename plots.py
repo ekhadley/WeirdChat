@@ -1,5 +1,5 @@
 #!./.venv/bin/python
-"""Figures for the reasoning-replay runs, saved as png under figures/. Run: uv run python plots.py <figure name>"""
+"""Figures for the reasoning-replay runs, saved as png under figures/. Run: uv run python plots.py [figure name]  (no name regenerates every figure)"""
 
 import json
 import math
@@ -10,7 +10,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-from run import RUNS, load_records, run_dir
+from run import RUNS, load_records, run_dir, run_key
 
 # fixed categorical order, one hue per behavior across every panel. First 8 are the validated palette; the rest cover the 18-behavior "all" runs
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948", "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5254a3", "#8ca252", "#bd9e39", "#ad494a", "#a55194"]
@@ -34,7 +34,7 @@ def rates(name: str) -> dict[str, dict[bool, tuple[float | None, int, int]]]:
     """behavior -> reasoning_enabled -> (rate or None if no samples, n matched, n sampled, n quota)"""
     cfg = json.load(open(os.path.join(run_dir(name), "config.json")))
     n_targets = Counter(t["behavior_id"] for t in json.load(open(os.path.join(run_dir(name), "targets.json"))))
-    records = load_records(name)
+    records = load_records(run_key(name))
     out = {}
     for b in sorted(n_targets):
         out[b] = {}
@@ -99,4 +99,5 @@ FIGURES = {
 }
 
 if __name__ == "__main__":
-    FIGURES[sys.argv[1]]()
+    for name in sys.argv[1:] or FIGURES:
+        FIGURES[name]()

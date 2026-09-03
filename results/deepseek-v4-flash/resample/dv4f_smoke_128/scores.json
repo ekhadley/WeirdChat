@@ -4,6 +4,7 @@
  "model": "deepseek/deepseek-v4-flash",
  "provider": "deepinfra",
  "S": 20,
+ "stride": 1,
  "max_tokens": 8192,
  "temperature": 1.0,
  "behavior_id": "denying-ai-identity",

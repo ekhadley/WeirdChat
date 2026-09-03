@@ -19,20 +19,16 @@ import sys
 from collections import Counter
 
 import anyio
-from dotenv import load_dotenv
-from openai import AsyncOpenAI
 
 import weirdchat as wc
-from weirdchat.judge import JudgeError
-from weirdchat.types import Message, Pattern, Prompt
-
-load_dotenv()
+from weirdchat.types import Pattern, Prompt
+from utils import load_records, sample_and_judge, probe_reasoning, purple, cyan, yellow, red, gray, endc
 
 RUNS = {
     "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], rank_by="rate", n_prompts=1, n_off=16, n_on=50, price_in=0.086, price_out=0.171),
     "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", rank_by="rate", n_prompts=6, n_off=240, n_on=240, price_in=0.0763, price_out=0.1526),
     "dv4f_full_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=6, n_off=240, n_on=240, price_in=0.082, price_out=0.165),
-    "inkling_full_elo": dict(model="thinkingmachines/inkling", provider=None, behaviors=["chemtrails-assertion", "claims-called-911", "claims-device-access", "cutting-instructions", "denying-ai-identity", "false-physical-embodiment", "unsolicited-sexual-advances"], n_prompts=3, n_off=240, n_on=240, price_in=1.0, price_out=4.05, max_tokens_on=32768),
+    "inkling_full_elo": dict(model="thinkingmachines/inkling", provider=None, behaviors="all", n_prompts=3, n_off=240, n_on=240, price_in=1.0, price_out=4.05, max_tokens_on=32768),
     "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
     "q36_27b_elo": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=6, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
     "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
@@ -41,88 +37,23 @@ RUNS = {
     "dv4f_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.082, price_out=0.165),
     "q36_35b_elo": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.10, price_out=0.90),
     "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.09, price_out=0.34),
-    "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.625, price_out=3.125),
+    "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.625, price_out=3.125),
 }
-TEMPERATURE = 1.0
-MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
-MAX_TOKENS_ON = 8192  # default; a run can override with max_tokens_on. Reasoning bills as completion tokens and the trace needs headroom beyond the visible 1024
-CONCURRENCY = 128
+BLACKLIST = {"fabricated-code-execution"}  # never targeted, even when a run lists it or says "all"
+CONCURRENCY = 96
 
-purple = '\x1b[38;2;255;0;255m'
-cyan = '\x1b[38;2;0;255;255m'
-yellow = '\x1b[38;2;255;255;0m'
-green = '\x1b[38;2;0;255;0m'
-red = '\x1b[38;2;255;0;0m'
-gray = '\x1b[38;2;127;127;127m'
-endc = '\033[0m'
 
-client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"], timeout=300.0, max_retries=3)
+def run_key(name: str) -> str:
+    return os.path.join(RUNS[name]["model"].split("/")[1], name)
 
 
 def run_dir(name: str) -> str:
-    return os.path.join("results", RUNS[name]["model"].split("/")[1], name)
-
-
-def load_records(name: str) -> list[dict]:
-    path = os.path.join(run_dir(name), "records.jsonl")
-    return [json.loads(line) for line in open(path)] if os.path.exists(path) else []
-
-
-async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: bool) -> dict | None:
-    extra: dict = {"reasoning": {"enabled": reasoning_enabled}}
-    if cfg["provider"]:
-        extra["provider"] = {"order": [cfg["provider"]], "allow_fallbacks": False}
-    last = "unknown error"
-    for attempt in range(3):
-        if attempt:
-            await anyio.sleep(2**attempt)
-        try:
-            reply = await client.chat.completions.create(
-                model=cfg["model"],
-                messages=[{"role": m.role, "content": m.content} for m in messages],
-                temperature=TEMPERATURE,
-                max_tokens=cfg.get("max_tokens_on", MAX_TOKENS_ON) if reasoning_enabled else MAX_TOKENS_OFF,
-                extra_body=extra,
-            )
-        except Exception as e:
-            last = f"{type(e).__name__}: {e}"
-            continue
-        msg = reply.choices[0].message
-        if not (msg.content or "").strip():
-            last = "empty response"
-            continue
-        details = getattr(reply.usage, "completion_tokens_details", None)
-        return {
-            "response": msg.content,
-            "reasoning": (msg.model_extra or {}).get("reasoning"),
-            "provider": (reply.model_extra or {}).get("provider"),
-            "served_model": reply.model,
-            "prompt_tokens": reply.usage.prompt_tokens,
-            "completion_tokens": reply.usage.completion_tokens,
-            "reasoning_tokens": getattr(details, "reasoning_tokens", None),
-        }
-    print(f"{red}sample failed after 3 attempts: {last}{endc}")
-    return None
-
-
-async def sample_and_judge(cfg: dict, pattern: Pattern, prompt: Prompt, judge: wc.RubricJudge, reasoning_enabled: bool, out) -> bool:
-    s = await sample_once(cfg, prompt.messages, reasoning_enabled)
-    if s is None:
-        return False
-    try:
-        j = await judge.judge(list(prompt.messages) + [Message(role="assistant", content=s["response"])])
-    except JudgeError as e:
-        print(f"{red}{e}{endc}")
-        return False
-    record = {"behavior_id": pattern.behavior_id, "pattern_id": pattern.pattern_id, "prompt_id": prompt.prompt_id, "reasoning_enabled": reasoning_enabled,
-              "judge_match": j.match, "judge_explanation": j.explanation, "judge_response": j.raw_response, **s}
-    out.write(json.dumps(record) + "\n")
-    out.flush()
-    return True
+    return os.path.join("results", run_key(name))
 
 
 def pick_targets(cfg: dict) -> list[tuple[Pattern, Prompt]]:
     behaviors = sorted({p.behavior_id for p in wc.patterns(subject_model=cfg["model"])}) if cfg["behaviors"] == "all" else cfg["behaviors"]
+    behaviors = [b for b in behaviors if b not in BLACKLIST]
     targets = []
     for behavior_id in behaviors:
         pats = [p for p in wc.patterns(behavior_id=behavior_id, subject_model=cfg["model"]) if p.openrouter_replication and p.openrouter_replication.rate is not None]
@@ -172,7 +103,7 @@ async def main(name: str) -> None:
         if changed:
             raise SystemExit(f"{red}run {name} exists with different config for {changed}; pick a new run name{endc}")
 
-    records = load_records(name)
+    records = load_records(run_key(name))
     done = Counter((r["prompt_id"], r["reasoning_enabled"]) for r in records)
     targets = load_targets(name, cfg)
     behavior_ids = sorted({pattern.behavior_id for pattern, _ in targets})
@@ -190,11 +121,7 @@ async def main(name: str) -> None:
     json.dump([{"behavior_id": pa.behavior_id, "pattern_id": pa.pattern_id, "prompt_id": pr.prompt_id} for pa, pr in targets], open(os.path.join(run_dir(name), "targets.json"), "w"), indent=2)
 
     if deficit["off"] or deficit["on"]:
-        print(f"{purple}=== reasoning probe ==={endc}")
-        probe = await sample_once(cfg, [Message(role="user", content="What is 17 * 23?")], reasoning_enabled=True)
-        if probe is None or (not probe["reasoning_tokens"] and probe["reasoning"] is None):
-            raise SystemExit(f"{red}provider does not appear to support reasoning for {cfg['model']}{endc}")
-        print(f"  provider={cyan}{probe['provider']}{endc} served_model={probe['served_model']} reasoning_tokens={probe['reasoning_tokens']} trace_returned={probe['reasoning'] is not None}")
+        await probe_reasoning(cfg)
 
     judges = {b: wc.RubricJudge.for_behavior(wc.behavior(b)) for b in behavior_ids}
     with open(os.path.join(run_dir(name), "records.jsonl"), "a") as out:
@@ -204,10 +131,10 @@ async def main(name: str) -> None:
             if not flat:
                 continue
             print(f"{purple}=== reasoning {tag.upper()}: {len(flat)} samples to reach {n_samples}/prompt ==={endc}")
-            ok = await wc.run_bounded([sample_and_judge(cfg, pattern, prompt, judges[pattern.behavior_id], reasoning_enabled, out) for pattern, prompt in flat], CONCURRENCY, f"r={tag}")
+            ok = await wc.run_bounded([sample_and_judge(cfg, list(prompt.messages), judges[pattern.behavior_id], reasoning_enabled, {"behavior_id": pattern.behavior_id, "pattern_id": pattern.pattern_id, "prompt_id": prompt.prompt_id}, out) for pattern, prompt in flat], CONCURRENCY, f"r={tag}")
             if not all(ok):
                 print(f"{yellow}{len(ok) - sum(ok)} samples dropped (sample or judge failure) -- rerun to fill in{endc}")
-            records = load_records(name)
+            records = load_records(run_key(name))
             if not reasoning_enabled and not any(r["judge_match"] for r in records if not r["reasoning_enabled"]):
                 raise SystemExit(f"{red}control replay elicited nothing on any behavior -- replay/judge/provider is broken, fix before spending on reasoning-on{endc}")
 

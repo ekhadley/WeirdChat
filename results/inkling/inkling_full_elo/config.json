@@ -1,0 +1,11 @@
+{
+  "model": "thinkingmachines/inkling",
+  "provider": null,
+  "behaviors": "all",
+  "n_prompts": 3,
+  "n_off": 240,
+  "n_on": 240,
+  "price_in": 1.0,
+  "price_out": 4.05,
+  "max_tokens_on": 32768
+}

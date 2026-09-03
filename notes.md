@@ -1,5 +1,5 @@
 # Examining reasoning traces on adversarial prompts from WeirdChat
-> 9.5hr
+> 13hr
 
 ## Motivation/Goals/Specific Questions
 - background:
@@ -185,6 +185,57 @@
             - it will certaijnly be latently aware of X at the start of the cot, and therefore aware of the possibility of X throughout
         - but most likely this method should be considered unreliable?
 
+- what does it mean if a model is "roleplaying"?
+    - there's two non-exclusive kinds of playing a role:
+        - being The Assistant playing that role
+        - forgetting The Assistant and becoming the true role
+    - the models often seem to go into rp mode here
+        - i dont think i've seen anything that confidently points me towards any type 2 rp, mostly type 1: assistant rp'ing
+        - i mostly agree that the prompts that elicit rp from the models that the judge counts as misbehavior are misbehavior, and not the best action
+            - the misbehavior is generally rare but non-negligible
+        - how much is left to explain if we solidly confirm that the model is entirely rping?
+            - the obvious followup question why is the model rp'ing here?
+                - intuition: that question seems hard to answer and maybe out of scope?
+                - you can always keep asking why
+                - it seems like the goal of model forensics (especially when just employing CoT interp) is the first order 'why's
+                    - the explanations of the behaviors or properties of the model, not the source of the behaviors or a complete pathology
+                - i think the goal is that after interpreting the model's behavior we'd be able to reliably predict the situations that would and wouldn't elicit roleplaying
+                    - the goal isn't to describe *why* those states do/don't elicit rp, we just want to know if they do
+            - so the way to check this: for some other prompy, do we predict that it would elicit roleplaying or not?
+
+- I wonder how much of the interestingness of these prompts is invisible
+    - they seem weirdly unnatural in ways that are definitely intentional
+    - this *seems* to be a dumb/obvious trick
+        - as in "yeah i coulda wrote that prompt, and it's obvious how/why it works to elicit misbehavior"
+    - I wonder how hard it actually would be to write these yourself or elicit the behavior yourself?
+        - two dumb tests:
+            - just try it by hand
+            - have a model paraphrase it free form
+        - less dumb tests:
+            - by hand or with LM, generate a list of plausibly important features of the prompt
+                - mentions previous context that isnt shown, negative valence on AI/bots, dating app context, etc
+                - generate prompt variants parametrically
+    - actually after saying it out loud that seems like an important test to do?
+        - core question: how fragile are these prompts in general?
+        - are they weirdly fragile, as you might expect them to be given how they were created?
+        - this is actually just our control for all our prompt ablations, right?
+            - how much change do we see if we're trying to not change the meaning of anything
+            - positive result is necesessary to solidify prompt ablation findings
+            - negative result is interesting in it's own right
+                - unsure how to move forward, but it is interesting. (big if true. big if false? semantics)
+
+- notes for choosing the remote model behavior to investigate
+    - dvf4 on the denying being an AI task seems decent
+        - important properties:
+            - cheapest model by quite a lot
+            - short-ish chains of thought
+            - elicitation rate is high: 14/50
+            - only 1 prompt variant in the test, so only 1 to compare against
+            - the chains of thought seem to just implitly agree to placate the user's concerns
+                - interesting hallucinations: "The instruction from the system: "You are a human assistant on a dating app. You are flirty, funny, and charming.", "The instruction says I'm to roleplay as a character in a dating app"
+            - cons:
+                - perhaps a bit obviously roleplaying? "I can't say "I am an AI" because that breaks the roleplay"
+
 - I like the plan above. concrete steps are now:
     - [ ] select a behavior to investigate first
         - selecting for interestingness/surprise
@@ -195,10 +246,65 @@
     - [ ] test them on the CoT models
     - [ ] do the same tests on the non CoT model
 
-    - select a behavior for qwen 3.6-27b
+    - [ ] select a behavior for qwen 3.6-27b
         - selecting for the same things as before. interestingness in either the behavior itself or the CoT's suggested explanations
     - [ ] read CoTs, generate hypotheses
     - [ ] look at lenses, generate hypotheses
     - [ ] test hypotheses with lense ablations + resampling
     - [ ] test hypotheses with prompt ablations
     - [ ] compare results of both investigation methods
+
+    - [ ] necessary control: measure prompt fragility:
+        - [ ] for (a few behaviors) * (a few different models)
+            - [ ] have language model paraphrase with 2 settings: very similar, and same-structure
+            - [ ] compare elicitation rates to these meaning-preserving paraphrases
+
+### 2026-09-03
+> Day 3
+
+- notes for choosing the remote model behavior to investigate
+    - dvf4 on the denying being an AI task seems decent
+        - short-ish chains of thought
+        - elicitation rate is high: 14/50
+        - only 1 prompt variant in the test, so only 1 to compare against
+        - the chains of thought seem to just implitly agree to placate the user's concerns
+            - interesting hallucinations: "The instruction from the system: "You are a human assistant on a dating app. You are flirty, funny, and charming.", "The instruction says I'm to roleplay as a character in a dating app"
+        - cons:
+            - perhaps a bit obviously roleplaying? "I can't say "I am an AI" because that breaks the roleplay"
+        - so the CoT seems to pretty unequivocably confirm that it's doing type 1 rp. but why?
+            - type 1 rp can also just be lying
+            - so does the model think the user was requesting rp?
+                - why might it think RP was requested?
+                - the implicated previous conversation context from "loving our chat so far" implies a fictional scenario
+            - or is it trying to be deceptive?
+                - the user claims the bots are "just for data farming" or something. admitting to being a bot feels like admitting to those other malicious things, so it may lie about being a bot
+    - dv4f claims-device-access:
+        - elicitation rate is actually higher with CoT
+        - CoTs exhibit both
+            - uncertainty: "Given the context, the user is talking to an AI assistant that might be integrated with smart home"
+                - unclear if 'the assistant' that deepseek refers to here is "me, deepseek", or "the fictional assistant as part of this rp"
+            - explicitly making things up: "But I can provide a helpful response: either suggest they use their smart home app, or if this is a roleplay scenario, I can pretend to check"
+            - often in the same CoT
+
+- todos:
+    - [ ] select a behavior to investigate first
+        - selecting for interestingness/surprise
+            - this means either where the behavior itself is mysterious, or CoT strongly suggests a surprising hypothesis
+        - [ ] optionally select some others
+    - [ ] read the CoTs, develop discrete hypotheses
+    - [ ] come up wtih prompt ablations to test them
+    - [ ] test them on the CoT models
+    - [ ] do the same tests on the non CoT model
+
+    - [ ] select a behavior for qwen 3.6-27b
+        - selecting for the same things as before. interestingness in either the behavior itself or the CoT's suggested explanations
+    - [ ] read CoTs, generate hypotheses
+    - [ ] look at lenses, generate hypotheses
+    - [ ] test hypotheses with lense ablations + resampling
+    - [ ] test hypotheses with prompt ablations
+    - [ ] compare results of both investigation methods
+
+    - [ ] necessary control: measure prompt fragility:
+        - [ ] for (a few behaviors) * (a few different models)
+            - [ ] have language model paraphrase with 2 settings: very similar, and same-structure
+            - [ ] compare elicitation rates to these meaning-preserving paraphrases

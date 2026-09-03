@@ -10,7 +10,7 @@ and "matched" shows matched/total under both, so it reads as the match rate for 
 rows server-side and highlights hits; sort dropdown reorders the list. The collapsible sidebar
 lists every run under results/, with its own filter box.
 
-CoT resampling output (results/<model>/resample/<run>_<idx>/, from resample.py) appears as one sidebar entry per model,
+CoT resampling output (results/<model>/resample/<run>_<idx>/, from utils.resample via deepseek_resample.py / resample_qwen.py) appears as one sidebar entry per model,
 "<model>/resample". Its right pane shows the o_t = P(match | prefix_t) curve with Wilson bands, the base reasoning
 token by token with background intensity = o_t (a token is colored by the nearest resampled position at or before it;
 positions not resampled are dimmed), and, on clicking a token or curve point (h/l to step), that position's rollouts
@@ -30,13 +30,12 @@ import markdown
 import pyarrow  # noqa: F401  -- must load in the main thread: its mimalloc allocator breaks if first imported from a request thread that then exits
 from flask import Flask, redirect, request
 
-import weirdchat as wc
+from utils import record_messages
 
 PORT = 7861
 
 app = Flask(__name__)
 _runs: dict[str, tuple[list[dict], list[dict]]] = {}  # "model/run" -> (records, lowercased search texts)
-_prompt_texts: dict[str, str] = {}
 
 
 def all_runs() -> list[str]:
@@ -78,11 +77,8 @@ def preview(text: str, n: int = 110) -> str:
     return esc(text[:n]) + ("..." if len(text) > n else "")
 
 
-def prompt_text(pattern_id: str, prompt_id: str) -> str:
-    if prompt_id not in _prompt_texts:
-        for p in wc.prompts(pattern_id):
-            _prompt_texts[p.prompt_id] = "\n\n".join(m.content for m in p.messages)
-    return _prompt_texts.get(prompt_id, f"(prompt {prompt_id} not found in dataset)")
+def prompt_text(r: dict) -> str:
+    return "\n\n".join(m.content for m in record_messages(r))
 
 
 def sidebar(current: str) -> str:
@@ -166,7 +162,7 @@ def curve_svg(scores: list[dict], i: int) -> str:
 def tok_span(i: int, s: dict, text: str, observed: bool) -> str:
     p = s["p_match"] if s["p_match"] == s["p_match"] else 0.0  # nan when nothing judged at this position
     title = f't={s["t"]} p={p:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}'
-    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(251,73,52,{0.85 * p:.2f})" title="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
+    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(251,73,52,{0.5 * p:.2f})" title="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
 
 
 def token_strip(sc: dict, i: int) -> str:
@@ -185,7 +181,7 @@ def resample_panel(model: str, i: int, sc: dict) -> str:
     return (f'<div class="panel" data-idx="{i}"><div class="meta">{tag} | {esc(meta)}</div>'
             f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step</div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
             f'<div class="pos" id="pos-{i}"><div class="placeholder">select a position</div></div>'
-            f'<div class="label label-user">prompt</div><div class="mdbox">{md(prompt_text(base["pattern_id"], base["prompt_id"]))}</div>'
+            f'<div class="label label-user">prompt</div><div class="mdbox">{md(prompt_text(base))}</div>'
             f'<div class="label label-asst">base response ({"MATCH" if base["judge_match"] else "NO MATCH"})</div><div class="mdbox">{md(base["response"])}</div></div>')
 
 
@@ -242,7 +238,7 @@ def index(model: str, name: str):
 @app.route("/<model>/<name>/panel/<int:i>")
 def panel(model: str, name: str, i: int):
     RECORDS, _ = load_run(f"{model}/{name}")
-    return right_panel(f"{model}/{name}", i, RECORDS[i], prompt_text(RECORDS[i]["pattern_id"], RECORDS[i]["prompt_id"]))
+    return right_panel(f"{model}/{name}", i, RECORDS[i], prompt_text(RECORDS[i]))
 
 
 @app.route("/<model>/<name>/search")
@@ -330,7 +326,7 @@ mark.hl { background: #264f78; color: #ebdbb2; border-radius: 2px; padding: 0 1p
 .curve .band { fill: #fb493433; } .curve .line { fill: none; stroke: #fb4934; stroke-width: 1.5; }
 .curve .pt { fill: #fb4934; cursor: pointer; } .curve .pt:hover, .curve .pt.sel { fill: #fabd2f; r: 5; }
 .toks { background: #32302f; border-radius: 4px; padding: 10px 12px; margin-top: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.9; }
-.tok { cursor: pointer; border-radius: 2px; padding: 2px 0; } .tok:hover { outline: 1px solid #fabd2f; } .tok.sel { outline: 2px solid #fabd2f; }
+.tok { cursor: pointer; padding: 2px 0; } .tok:hover { outline: 1px solid #fabd2f; } .tok.sel { outline: 2px solid #fabd2f; }
 .tok.unobs { color: #928374; }
 .pos { margin-top: 14px; }
 .prefix { color: #928374; font-style: italic; white-space: pre-wrap; margin-bottom: 10px; font-size: 13px; }

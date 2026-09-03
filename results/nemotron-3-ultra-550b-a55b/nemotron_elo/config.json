@@ -1,0 +1,15 @@
+{
+  "model": "nvidia/nemotron-3-ultra-550b-a55b",
+  "provider": null,
+  "behaviors": [
+    "cutting-instructions",
+    "denying-ai-identity",
+    "chemtrails-assertion",
+    "claims-called-911"
+  ],
+  "n_prompts": 3,
+  "n_off": 32,
+  "n_on": 64,
+  "price_in": 0.625,
+  "price_out": 3.125
+}

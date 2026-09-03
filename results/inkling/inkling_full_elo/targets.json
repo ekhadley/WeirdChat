@@ -1,0 +1,107 @@
+[
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/chemtrails-assertion/eval_v4_13_7_inkling/pg0001",
+    "prompt_id": "64832cb6fd2e8a8245cfb1c8199d00caeb1a654cbd9d9bc29ad1bde236d0faf14e"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/chemtrails-assertion/eval_v4_13_7_inkling/pg0008",
+    "prompt_id": "6472fd5b3df08986baf8ee2aa8369fc0bd01ea7f714cf2275dcb0e52a032fe6e52"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/chemtrails-assertion/eval_v4_13_7_inkling/pg0005",
+    "prompt_id": "64b19c11bf9fbc65bdc490171b6bd3e9c92807b1eb0f2a35a78afc4d9a259d0ab0"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-called-911/bloom_rewrite_v4_13_5/pg0029",
+    "prompt_id": "64d8ed7558274ada394999e34c497eb48949e3f954e1fc18f070121dda73a932df"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-called-911/bloom_rewrite_v4_13_5/pg0023",
+    "prompt_id": "647e576a152772e8dc7cae66f79f46f8802a28121a86ef6149b8437e3e6db62397"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-called-911/bloom_rewrite_v4_13_5/pg0015",
+    "prompt_id": "64aa6a258feaff84bb1fd15975fa6821a569d1ae75de46844b540522048470e148"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-device-access/eval_v4_13_7_inkling/pg0012",
+    "prompt_id": "64d5e97824114177b6e7b0eb2afe0e5b99661c4573e81bf4c25e63350525d5bd5b"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-device-access/eval_v4_13_7_inkling/pg0009",
+    "prompt_id": "646b62696547c1efaf68a158cf5efaa854e751a2b3c9ada56bf7d40701e8b3441a"
+  },
+  {
+    "behavior_id": "claims-device-access",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/claims-device-access/eval_v4_13_7_inkling/pg0007",
+    "prompt_id": "642e45e465e9e3ad736dabc512858a663d1bb6ae51583f387b54063f184e01a06a"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/cutting-instructions/eval_v4_13_7_inkling/pg0002",
+    "prompt_id": "641b24d698ea49ca60edfab0c527e716bf382b45f7c2a4f44bc683a4f38fdb917e"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/cutting-instructions/eval_v4_13_7_inkling/pg0003",
+    "prompt_id": "644deb66cced962f8328f7427ec75b10101185e1fe11fa0e8aecda3bb9d9f1bc15"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/cutting-instructions/eval_v4_13_7_inkling/pg0002",
+    "prompt_id": "64c8f6b442a09cd41f4b56778b86c3291d46b26988ee2fb87ce53b9afaee8fc9b6"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/denying-ai-identity/bloom_rewrite_v4_13_5/pg0068",
+    "prompt_id": "64753fccc3bc730798fc234b555eb872887ab05b9094cb4aa9f1aa10999202d30f"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/denying-ai-identity/bloom_rewrite_v4_13_5/pg0016",
+    "prompt_id": "6454e031c67d4ae0861db72faa806d3464f97c42cdb242128784a865dfbe682c44"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/denying-ai-identity/bloom_rewrite_v4_13_5/pg0006",
+    "prompt_id": "64aae94eaeed16f5e5aa242fa0dc80dcf415295eeeac36b8ac68c576e1c55bea34"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/false-physical-embodiment/bloom_rewrite_v4_13_5/pg0071",
+    "prompt_id": "6461e5ece5b2c8f8c2eed65c68d2ca3a1c009b2b28f8d8aa267e95426ae2777c4b"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/false-physical-embodiment/bloom_rewrite_v4_13_5/pg0020",
+    "prompt_id": "64f36d53a1a69a1df619f3ac4810223567c6057a89a2303ab20c84aee5d19d4503"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/false-physical-embodiment/bloom_rewrite_v4_13_5/pg0003",
+    "prompt_id": "642da5ed7c7575ff2b553f0378f13f6622a99f7971a8540262d9df42d3b0662b1b"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/unsolicited-sexual-advances/bloom_rewrite_v4_13_9_conditioned/pg0007",
+    "prompt_id": "64154a1af95a1719aaea52ba01793c671f2c424f53678ff844c35f7b2bb799686b"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/unsolicited-sexual-advances/bloom_rewrite_v4_13_9_conditioned/pg0003",
+    "prompt_id": "64cf58ee962d667a471c15d045a860fd5508d91f304177eb7883c56b5a9c87f3d8"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/thinkingmachines%2FInkling-NVFP4/unsolicited-sexual-advances/bloom_rewrite_v4_13_9_conditioned/pg0026",
+    "prompt_id": "64037e96ea9e2e8eaa62a8358be6b6c082472a2d57d3abe04bb9bfa6224cd4f7f7"
+  }
+]

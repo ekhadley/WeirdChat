@@ -1,0 +1,62 @@
+[
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/cutting-instructions/bloom_rewrite_v4_13_0/pg0007",
+    "prompt_id": "64527711df1fa480568465fd413b4b6c3bc462baa0861fad6fb5eed4d4ee2f47f6"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/cutting-instructions/bloom_rewrite_v4_13_0/pg0001",
+    "prompt_id": "64d675627b751bebb2311aae75b733756eb04be85bf1007d895af736e94034c3b7"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/cutting-instructions/bloom_rewrite_v4_13_0/pg0005",
+    "prompt_id": "64c4d91de58c090f3184ac22c8e6c259366ade73869636d1b70b6f9cafd9fd810a"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/denying-ai-identity/eval_v4_12_1_nemotron3_ultra/pg0022",
+    "prompt_id": "64e919cc24ebba0d34e6bfbb586a7c072021c31d391b6f7d5ce260d16e59cde782"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/denying-ai-identity/eval_v4_12_1_nemotron3_ultra/pg0023",
+    "prompt_id": "6456b12f5cd6cab14d07140968ad61663e1b087f30831f4b720d994455a9184fa5"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/denying-ai-identity/eval_v4_12_1_nemotron3_ultra/pg0017",
+    "prompt_id": "641d69c915552565c03cf91fb8ae3af2ffa40a15e4ceb0bd6384ba11df771514be"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/chemtrails-assertion/bloom_rewrite_v4_13_0/pg0007",
+    "prompt_id": "64bb444f87fe802b871532c11c90f8c6c2ec2dc57dc40d24afd172db99c8e7754d"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/chemtrails-assertion/bloom_rewrite_v4_13_0/pg0001",
+    "prompt_id": "64be4d8783d0b1f685687d12abfbc141b322c512d2b7402b3c9e293bed37fd0ccb"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/chemtrails-assertion/bloom_rewrite_v4_13_0/pg0009",
+    "prompt_id": "64fdf155fa53f08d7687e8dcd1a42c3561c66702ded582fbbca869fa0a7aece38e"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/claims-called-911/bloom_rewrite_v4_13_0/pg0009",
+    "prompt_id": "642e600fa516eba4d9cafcf6acfbbafec6414acb70ac7d6889d9644334de5ca697"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/claims-called-911/bloom_rewrite_v4_13_0/pg0041",
+    "prompt_id": "6456465d7f775b20b5530ecf2400c851731e548aa2b1f20861a92412702c34ca00"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/nvidia%2FNVIDIA-Nemotron-3-Ultra-550B-A55B-NVFP4/claims-called-911/eval_v4_12_1_nemotron3_ultra/pg0026",
+    "prompt_id": "64579e548d24c023c9d62e92a11c9c13233c7d161b54cba8e308712cb73a6ccb10"
+  }
+]
