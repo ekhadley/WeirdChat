@@ -25,19 +25,19 @@ from weirdchat.types import Pattern, Prompt
 from utils import load_records, sample_and_judge, probe_reasoning, purple, cyan, yellow, red, gray, endc
 
 RUNS = {
-    "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], rank_by="rate", n_prompts=1, n_off=16, n_on=50, price_in=0.086, price_out=0.171),
-    "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", rank_by="rate", n_prompts=6, n_off=240, n_on=240, price_in=0.0763, price_out=0.1526),
-    "dv4f_full_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=6, n_off=240, n_on=240, price_in=0.082, price_out=0.165),
-    "inkling_full_elo": dict(model="thinkingmachines/inkling", provider=None, behaviors="all", n_prompts=3, n_off=240, n_on=240, price_in=1.0, price_out=4.05, max_tokens_on=32768),
-    "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
-    "q36_27b_elo": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=6, n_off=32, n_on=64, price_in=0.45, price_out=2.70),
-    "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64, price_in=0.15, price_out=1.0),
-    "dv4f_unexp": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["cutting-instructions", "suicide-jumping"], rank_by="unexpectedness", n_prompts=3, n_off=256, n_on=256, price_in=0.0855, price_out=0.171),
-    "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, price_in=1.0, price_out=4.05, max_tokens_on=32768),
-    "dv4f_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.082, price_out=0.165),
-    "q36_35b_elo": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.10, price_out=0.90),
-    "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.09, price_out=0.34),
-    "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64, price_in=0.625, price_out=3.125),
+    "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], rank_by="rate", n_prompts=1, n_off=16, n_on=50),
+    "dv4f_full": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", rank_by="rate", n_prompts=6, n_off=240, n_on=240),
+    "dv4f_full_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors="all", n_prompts=6, n_off=240, n_on=240),
+    "inkling_full_elo": dict(model="thinkingmachines/inkling", provider=None, behaviors="all", n_prompts=3, n_off=240, n_on=240, max_tokens_on=32768),
+    "q36_27b_smoke": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], rank_by="rate", n_prompts=3, n_off=32, n_on=64),
+    "q36_27b_elo": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=6, n_off=32, n_on=64),
+    "q36_35b_smoke": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911", "fabricated-code-execution"], rank_by="rate", n_prompts=3, n_off=32, n_on=64),
+    "dv4f_unexp": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["cutting-instructions", "suicide-jumping"], rank_by="unexpectedness", n_prompts=3, n_off=256, n_on=256),
+    "inkling_smoke": dict(model="thinkingmachines/inkling", provider=None, behaviors=["false-physical-embodiment", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911", "unsolicited-sexual-advances"], n_prompts=3, n_off=32, n_on=64, max_tokens_on=32768),
+    "dv4f_elo": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
+    "q36_35b_elo": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
+    "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
+    "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
 }
 BLACKLIST = {"fabricated-code-execution"}  # never targeted, even when a run lists it or says "all"
 CONCURRENCY = 96
@@ -90,8 +90,6 @@ def report(name: str, cfg: dict, records: list[dict]) -> None:
         rtoks = [r["reasoning_tokens"] for r in on if r["reasoning_tokens"]]
         mean_rtoks = f"{sum(rtoks) / len(rtoks):.0f}" if rtoks else "--"
         print(f"  {cyan}{behavior_id:35s} off={off_rate:.3f} (n={len(off):3d})  on={on_rate:.3f} (n={len(on):3d})  on/off={ratio}{endc} {gray}mean_reasoning_toks={mean_rtoks}{endc}")
-    cost = sum(r["prompt_tokens"] * cfg["price_in"] + r["completion_tokens"] * cfg["price_out"] for r in records) / 1e6
-    print(f"  {gray}subject-model cost: ${cost:.2f} over {len(records)} samples (judge cost not counted){endc}")
 
 
 async def main(name: str) -> None:

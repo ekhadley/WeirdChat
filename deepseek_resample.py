@@ -20,7 +20,7 @@ cfg = ResampleConfig(
     run="deepseek-v4-flash/dv4f_full_elo", idx=26573,
     model="deepseek/deepseek-v4-flash", provider="deepinfra", tokenizer="deepseek-ai/DeepSeek-V4-Flash",
     render_prompt=lambda tok, msgs: encode_messages([{"role": m.role, "content": m.content} for m in msgs], "thinking"),  # ends with <｜Assistant｜><think>
-    price_in=0.09, price_out=0.18, S=50, stride=1,
+    S=25, stride=1,
 )
 
 if __name__ == "__main__":

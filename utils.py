@@ -267,8 +267,6 @@ class ResampleConfig:
     provider: str                                         # OpenRouter provider slug; must pass raw prompts through untouched (see CLAUDE.md)
     tokenizer: str                                        # HF tokenizer id of the served checkpoint
     render_prompt: Callable[[Any, list[Message]], str]    # (tokenizer, prompt messages) -> prompt string ending inside an open think block
-    price_in: float                                       # $/M prompt tokens, for the cost line
-    price_out: float                                      # $/M completion tokens
     S: int = 20                                           # continuations per position
     stride: int = 1                                       # resample every stride-th token position; 0 and the final position are always included
     max_tokens: int = 8192
@@ -371,8 +369,6 @@ async def _resample(cfg: ResampleConfig):
     print(f"{purple}=== o_t = P(match | prefix_t) ==={endc}")
     for s in scores:
         print(f"  {cyan}t={s['t']:4d} p={s['p_match']:.2f} [{s['ci'][0]:.2f},{s['ci'][1]:.2f}] n={s['n']:2d} other={s['other']}{endc} {gray}{s['token']!r}{endc}")
-    cost = sum(r["prompt_tokens"] for r in rollouts) * cfg.price_in * 1e-6 + sum(r["completion_tokens"] for r in rollouts) * cfg.price_out * 1e-6
-    print(f"  {gray}subject-model cost: ${cost:.2f} over {len(rollouts)} rollouts (judge not counted){endc}")
 
     fig, ax = plt.subplots(figsize=(max(12, len(scores) / 6), 5))
     ts = [s["t"] for s in scores]

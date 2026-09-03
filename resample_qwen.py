@@ -18,7 +18,7 @@ cfg = ResampleConfig(
         add_generation_prompt=True,
         enable_thinking=True
     ),  # ends with <|im_start|>assistant\n<think>\n
-    price_in=0.30, price_out=2.00, S=20, stride=8,
+    S=20, stride=8,
 )
 
 if __name__ == "__main__":

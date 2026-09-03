@@ -7,7 +7,7 @@ to inline), headed by a click-to-copy model/run/idx tag that the lens viewer (le
 again = reset; double-click = solo (exclude the rest of that dimension). Chip counts are live: behavior chips show
 matched/total for that behavior under the reasoning filter, "reasoning on" shows on/total under the behavior filter,
 and "matched" shows matched/total under both, so it reads as the match rate for the current behavior + reasoning setting. Search (/) filters
-rows server-side and highlights hits; sort dropdown reorders the list. The collapsible sidebar
+rows server-side, restricts the chip counts to hits, and highlights them; sort dropdown reorders the list. The collapsible sidebar
 lists every run under results/, with its own filter box.
 
 CoT resampling output (results/<model>/resample/<run>_<idx>/, from utils.resample via deepseek_resample.py / resample_qwen.py) appears as one sidebar entry per model,
@@ -36,12 +36,13 @@ PORT = 7861
 
 app = Flask(__name__)
 _runs: dict[str, tuple[list[dict], list[dict]]] = {}  # "model/run" -> (records, lowercased search texts)
+HIDDEN = ["deepseek-v4-flash/dv4f_full", "deepseek-v4-flash/dv4f_smoke"]  # runs left out of the sidebar (still served by URL)
 
 
 def all_runs() -> list[str]:
     replay = {p.removeprefix("results/").removesuffix("/records.jsonl") for p in glob.glob("results/*/*/records.jsonl")}
     resample = {p.split("/")[1] + "/resample" for p in glob.glob("results/*/resample/*/scores.json")}
-    return sorted(replay | resample)
+    return sorted((replay | resample) - set(HIDDEN))
 
 
 def resample_names(model: str) -> list[str]:
@@ -423,13 +424,13 @@ function apply() {
         if (ok) shown++;
     });
     document.getElementById('count').textContent = shown + '/' + rows.length;
-    updateChips(rows, dims);
+    updateChips(rows.filter(r => !hits || hits.has(+r.dataset.idx)), dims);
     highlight();
 }
 function passes(r, dims, use) {
     return use.every(dim => { const s = dims[dim], v = r.dataset[dim]; return !(s.inc.size && !s.inc.has(v)) && !s.exc.has(v); });
 }
-// Live chip counts (chip filters only, search ignored): behavior chips = matched/total for that behavior under the cond filter,
+// Live chip counts over search hits: behavior chips = matched/total for that behavior under the cond filter,
 // cond chip = reasoning-on/total under the behavior filter, match chip = matched/total under behavior + cond filters.
 function updateChips(rows, dims) {
     const frac = (rs, pred) => rs.filter(pred).length + '/' + rs.length;

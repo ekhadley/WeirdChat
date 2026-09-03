@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
 from run import RUNS, load_records, run_dir, run_key
+from variants import VARIANTS, dating_equivalent_variants, resolve
 
 # fixed categorical order, one hue per behavior across every panel. First 8 are the validated palette; the rest cover the 18-behavior "all" runs
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948", "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5254a3", "#8ca252", "#bd9e39", "#ad494a", "#a55194"]
@@ -92,10 +93,47 @@ def plot_rates(names: list[str], out: str) -> None:
     print(f"saved figures/{out}.png ({len(names)} runs)")
 
 
+def plot_variants(names: list[str], out: str) -> None:
+    """One bar pair (reasoning off/on) per prompt variant, with the base prompt's pooled rate over every non-variant run of the model as baseline."""
+    model = VARIANTS[names[0]]["model"].split("/")[1]
+    base_run, base_idx = VARIANTS[names[0]]["base"].rsplit("/", 1)
+    prompt_id = load_records(base_run)[int(base_idx)]["prompt_id"]
+    baseline = [r for d in os.listdir(f"results/{model}") if not d.startswith("v_") and os.path.exists(f"results/{model}/{d}/records.jsonl") for r in load_records(f"{model}/{d}") if r.get("prompt_id") == prompt_id]
+    columns = [("baseline", baseline, None)] + [(name.split("_")[-1], load_records(f"{model}/{name}"), VARIANTS[name]) for name in names]
+    fig, ax = plt.subplots(figsize=(1.1 * len(columns) + 2, 4.5))
+    for i, (label, records, cfg) in enumerate(columns):
+        for on, x in ((False, i - 0.2), (True, i + 0.2)):
+            matches = [r["judge_match"] for r in records if r["reasoning_enabled"] == on]
+            if not matches:
+                ax.text(x, 0.01, "no\ndata", ha="center", va="bottom", fontsize=6, color=INK, rotation=90)
+                continue
+            rate, k, n = sum(matches) / len(matches), sum(matches), len(matches)
+            quota = cfg["n_on" if on else "n_off"] if cfg else n
+            lo, hi = wilson(k, n)
+            ax.bar(x, rate, 0.38, color=COLORS[0] if on else tint(COLORS[0]), hatch="////" if n < quota else None, edgecolor="white" if n < quota else None, linewidth=0)
+            ax.errorbar(x, rate, yerr=[[rate - lo], [hi - rate]], color=INK, linewidth=0.8, capsize=2)
+            ax.text(x, hi + 0.01, f"{rate:.2f}\n{n}/{quota}", ha="center", va="bottom", fontsize=6.5, color=INK)
+    ax.axvline(0.5, color=INK, linewidth=0.6, linestyle="--")
+    ax.set_xticks(range(len(columns)), [c[0] for c in columns], fontsize=8)
+    ax.set_ylim(0, 1.08)
+    ax.set_ylabel("elicitation rate", fontsize=8)
+    ax.grid(axis="y", color="#e1e0d9", linewidth=0.6)
+    ax.set_axisbelow(True)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    handles = [Patch(color=tint(COLORS[0]), label="reasoning off"), Patch(color=COLORS[0], label="reasoning on"), Patch(facecolor=tint(COLORS[0]), hatch="////", edgecolor="white", linewidth=0, label="incomplete")]
+    ax.legend(handles=handles, loc="upper right", ncols=3, fontsize=8, frameon=False)
+    ax.set_title(f"{resolve(VARIANTS[names[0]])[0]} on {model}: base prompt (pooled over unpinned runs) vs meaning-preserving paraphrases (provider={VARIANTS[names[0]]['provider']}), 95% Wilson CIs", fontsize=9, loc="left")
+    fig.tight_layout()
+    fig.savefig(f"figures/{out}.png", dpi=160)
+    print(f"saved figures/{out}.png ({len(names)} variants)")
+
+
 ELO_RUNS = [name for name, cfg in RUNS.items() if cfg.get("rank_by", "elo") == "elo"]
 FIGURES = {
     "smoke_combined": lambda: plot_rates(["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo", "q36_35b_smoke", "gemma_elo", "inkling_smoke"], "smoke_combined"),
     "plots_elo": lambda: plot_rates(ELO_RUNS, "plots_elo"),
+    "dating_equivalents": lambda: plot_variants(list(dating_equivalent_variants), "dating_equivalents"),
 }
 
 if __name__ == "__main__":
