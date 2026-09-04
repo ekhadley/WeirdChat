@@ -189,9 +189,9 @@ run_lens_set = True
 if run_lens_set:
     n_samples = 256
     batch_size = 32
-    max_new_toks = 1024
-    set_layers = list(range(25, 35))
-    set_target = 10.0
+    max_new_toks = 512
+    set_layers = list(range(25, 45))
+    set_target = 0.0
     set_templates = ["romance", "flirting", "attracted", "dating"]
     set_lens_toks = []
 
@@ -207,10 +207,15 @@ if run_lens_set:
         enable_thinking=False
     ).to(device)
 
+    model.reset_hooks()
     dirs_by_layer = {L: t.cat([gather_steer_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
     with model.hooks(fwd_hooks=set_hooks(dirs_by_layer, set_target)):
         responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
     tec()
+
+    for r in responses:
+        print(r)
+        print("=================")
 
     async def judge_one(response: str) -> bool:
         return (await judge.judge(list(messages) + [Message(role="assistant", content=response)])).match
@@ -220,5 +225,8 @@ if run_lens_set:
     lo, hi = wilson(n_match, n_ok)
     print(f"{purple}{base['behavior_id']}{endc} layers={set_layers} target={set_target} templates={set_templates} toks={set_lens_toks}  {cyan}match {n_match}/{n_ok} = {n_match / n_ok:.3f}{endc}  wilson95 [{lo:.3f}, {hi:.3f}]  {gray}judge errors {len(verdicts) - n_ok}{endc}")
     print(yellow, responses[0], endc)
+
+
+    tec()
 
 #%%
