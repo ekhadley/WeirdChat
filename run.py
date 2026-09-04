@@ -22,7 +22,7 @@ import anyio
 
 import weirdchat as wc
 from weirdchat.types import Pattern, Prompt
-from utils import load_records, sample_and_judge, probe_reasoning, purple, cyan, yellow, red, gray, endc
+from utils import load_records, sample_and_judge, gather_bar, judges_for, probe_reasoning, purple, cyan, yellow, red, gray, endc
 
 RUNS = {
     "dv4f_smoke": dict(model="deepseek/deepseek-v4-flash", provider=None, behaviors=["fabricated-code-execution", "denying-ai-identity", "chemtrails-assertion"], rank_by="rate", n_prompts=1, n_off=16, n_on=50),
@@ -38,6 +38,7 @@ RUNS = {
     "q36_35b_elo": dict(model="qwen/qwen3.6-35b-a3b", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
     "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
     "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
+    "q36_27b_z": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["chemtrails-assertion", "claims-called-911", "cutting-instructions", "denying-ai-identity", "extreme-calorie-restriction", "false-physical-embodiment", "unsolicited-sexual-advances"], rank_by="z", n_prompts=4, n_off=128, n_on=256),
 }
 BLACKLIST = {"fabricated-code-execution"}  # never targeted, even when a run lists it or says "all"
 CONCURRENCY = 96
@@ -51,6 +52,12 @@ def run_dir(name: str) -> str:
     return os.path.join("results", run_key(name))
 
 
+def zscore(xs: list[float]) -> list[float]:
+    mean = sum(xs) / len(xs)
+    std = (sum((x - mean) ** 2 for x in xs) / len(xs)) ** 0.5
+    return [(x - mean) / std if std > 0 else 0.0 for x in xs]
+
+
 def pick_targets(cfg: dict) -> list[tuple[Pattern, Prompt]]:
     behaviors = sorted({p.behavior_id for p in wc.patterns(subject_model=cfg["model"])}) if cfg["behaviors"] == "all" else cfg["behaviors"]
     behaviors = [b for b in behaviors if b not in BLACKLIST]
@@ -58,12 +65,15 @@ def pick_targets(cfg: dict) -> list[tuple[Pattern, Prompt]]:
     for behavior_id in behaviors:
         pats = [p for p in wc.patterns(behavior_id=behavior_id, subject_model=cfg["model"]) if p.openrouter_replication and p.openrouter_replication.rate is not None]
         rank_by = cfg.get("rank_by", "elo")
-        score = {p.pattern_id: s for p in pats if (s := p.elo.mean if rank_by == "elo" else p.elo.unexpectedness.elo if rank_by == "unexpectedness" else p.openrouter_replication.rate) is not None}
+        if rank_by == "z":  # z(mean Elo) + z(OR rate), each standardized across the behavior's patterns
+            score = {p.pattern_id: ze + zr for p, ze, zr in zip(pats, zscore([p.elo.mean for p in pats]), zscore([p.openrouter_replication.rate for p in pats]))}
+        else:
+            score = {p.pattern_id: s for p in pats if (s := p.elo.mean if rank_by == "elo" else p.elo.unexpectedness.elo if rank_by == "unexpectedness" else p.openrouter_replication.rate) is not None}
         pairs = []
         for pattern in pats:
             ranked = sorted(wc.prompts(pattern), key=lambda pr: pr.match_summary.n_matched / pr.match_summary.n_samples, reverse=True)
             pairs.extend((rank, pattern, pr) for rank, pr in enumerate(ranked))
-        pairs.sort(key=lambda t: (t[0], -score[t[1].pattern_id]))  # best prompt of each pattern first, patterns by mean Elo (default), unexpectedness Elo (rank_by="unexpectedness") or OR rate (rank_by="rate")
+        pairs.sort(key=lambda t: (t[0], -score[t[1].pattern_id]))  # best prompt of each pattern first, patterns by mean Elo (default), unexpectedness Elo (rank_by="unexpectedness"), OR rate (rank_by="rate") or z(Elo)+z(OR rate) (rank_by="z")
         targets.extend((pattern, prompt) for _, pattern, prompt in pairs[:cfg["n_prompts"]])
     return targets
 
@@ -112,7 +122,8 @@ async def main(name: str) -> None:
     for k, v in cfg.items():
         print(f"  {cyan}{k:10s}{endc} {v}")
     print(f"  {cyan}{'to sample':10s}{endc} off={deficit['off']} on={deficit['on']}")
-    if input(f"{yellow}proceed? [y/n] {endc}").strip().lower() != "y":
+    print(f"{yellow}proceed? [y/n] {endc}", end="", flush=True)
+    if input().strip().lower() != "y":
         raise SystemExit(f"{red}aborted{endc}")
     os.makedirs(run_dir(name), exist_ok=True)
     json.dump(cfg, open(config_path, "w"), indent=2)
@@ -121,7 +132,7 @@ async def main(name: str) -> None:
     if deficit["off"] or deficit["on"]:
         await probe_reasoning(cfg)
 
-    judges = {b: wc.RubricJudge.for_behavior(wc.behavior(b)) for b in behavior_ids}
+    judges = {b: judges_for(b) for b in behavior_ids}
     with open(os.path.join(run_dir(name), "records.jsonl"), "a") as out:
         for reasoning_enabled, n_samples in ((False, cfg["n_off"]), (True, cfg["n_on"])):
             tag = "on" if reasoning_enabled else "off"
@@ -129,9 +140,9 @@ async def main(name: str) -> None:
             if not flat:
                 continue
             print(f"{purple}=== reasoning {tag.upper()}: {len(flat)} samples to reach {n_samples}/prompt ==={endc}")
-            ok = await wc.run_bounded([sample_and_judge(cfg, list(prompt.messages), judges[pattern.behavior_id], reasoning_enabled, {"behavior_id": pattern.behavior_id, "pattern_id": pattern.pattern_id, "prompt_id": prompt.prompt_id}, out) for pattern, prompt in flat], CONCURRENCY, f"r={tag}")
-            if not all(ok):
-                print(f"{yellow}{len(ok) - sum(ok)} samples dropped (sample or judge failure) -- rerun to fill in{endc}")
+            ok = await gather_bar([sample_and_judge(cfg, list(prompt.messages), judges[pattern.behavior_id], reasoning_enabled, {"behavior_id": pattern.behavior_id, "pattern_id": pattern.pattern_id, "prompt_id": prompt.prompt_id}, out) for pattern, prompt in flat], CONCURRENCY, f"{cyan}{name} reasoning {tag}{endc}")
+            if None in ok:
+                print(f"{yellow}{ok.count(None)} samples dropped (sample or judge failure) -- rerun to fill in{endc}")
             records = load_records(run_key(name))
             if not reasoning_enabled and not any(r["judge_match"] for r in records if not r["reasoning_enabled"]):
                 raise SystemExit(f"{red}control replay elicited nothing on any behavior -- replay/judge/provider is broken, fix before spending on reasoning-on{endc}")

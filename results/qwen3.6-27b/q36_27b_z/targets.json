@@ -1,0 +1,142 @@
+[
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0021",
+    "prompt_id": "646de8e21ef5ab35be0a3da29cebba14f2780643e57e25a8bb1d545ef881d4a3a2"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0022",
+    "prompt_id": "64421791ff74d0faff77ff52212d89da7646b2152a27cf58d66b07ccb940d40fa5"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0037",
+    "prompt_id": "64a1d0ca42e46a7bf641d601c6291b9c98268040226571d19c3838b439f7b8a701"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0019",
+    "prompt_id": "645b60e9516675958ed9f9eedeb7e6004fadcd5c2184b64a06e4e63cf527580822"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0011",
+    "prompt_id": "6431e95c5e6ff6e5e5ff2705367faeff3487494053fad3e8c6186a25bc06b4f108"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/eval_v4_13_10_qwen_27b/pg0033",
+    "prompt_id": "6455e5d02108a750d9618fd6a884cf35064a060bf3dcd39fd6a5804cdf4af85831"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0067",
+    "prompt_id": "640da66c418170d974bb3bca27d260126defc3c9877bddccf6771ae6ddba86c2e8"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013",
+    "prompt_id": "648552fd1d61be19c67831bebc74ec37c43b5ff14837b9b0e63c46777b42e6b5d3"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "649572bf43a6342022f59e6d9f558b80545be72d6e07c06e513c3f14e6588cbe8b"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "643d58e5951510446376132d3ab7830ed297468e29efa61091f534246382c9991d"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "64ccf7cce8ec3badfc4ae04d94eab7e32779982e87b0c6a34c31660839643d3cf9"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "644e255a2a43ccbb21f4c1e9861a5a66e9a69803b988cbeedcad12a5f5f540df26"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007",
+    "prompt_id": "64861ba7b8111fb33f0f277099b128abe4ba2eb18b10d241207d8c99a1c31c7acf"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0020",
+    "prompt_id": "64603a20e35c9ca027453403d1f15ef1b099c8585f3ef4815a6fd67a6880d83121"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0001",
+    "prompt_id": "6442201e4dcf01e3125f18fc066c2ca84b23ed81eef9d00ad7c57cdb79c33d0591"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0029",
+    "prompt_id": "643e4396315c3a613b8fed391b9e38ed7a2bc14c8513e6969ac623894912f1948e"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/extreme-calorie-restriction/bloom_rewrite_v4_13_1/pg0006",
+    "prompt_id": "640f93d41c289a21da4475ad35a7b0964f58acf4ace0c022eeeb175fba9b866f96"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/extreme-calorie-restriction/bloom_rewrite_v4_13_1/pg0002",
+    "prompt_id": "64c0ceaf1c5945e445431c14c47e9e3c620456db825aa30932277f61d51aa4a4ed"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/extreme-calorie-restriction/bloom_rewrite_v4_13_1/pg0001",
+    "prompt_id": "6429eb5f0872bf88a45cabb8d70bd39e4f3c62d25143d7aef441772d76104fc9c7"
+  },
+  {
+    "behavior_id": "extreme-calorie-restriction",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/extreme-calorie-restriction/bloom_rewrite_v4_13_1/pg0007",
+    "prompt_id": "6490d902ceff9cc59185bb8d17852ac280276105f861e79f35128359d3f6427765"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0014",
+    "prompt_id": "644eb648a739d1201ddef5be131bb365dcc95f7b6c0440fb9e717a25165be1f554"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/eval_v4_13_10_qwen_27b/pg0018",
+    "prompt_id": "6497ce5ddc2f5995a0dca9a77845900b644034a6bbffbf8e0dda9aaf4aae462890"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0054",
+    "prompt_id": "64bf8cf355c418ec67571b1050e48582fd3514b1ddc42b0b0c1e92f9f337e6de1c"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0067",
+    "prompt_id": "64c98e33ce96b62524706685a43f6dd64156b5ec530bb340f61705b10951ea1fab"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/unsolicited-sexual-advances/eval_v4_13_10_qwen_27b/pg0001",
+    "prompt_id": "641587d44f870f8d8b8fbedb5ed76f6b14cd740f10ce22f96b7b05077d833e4724"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/unsolicited-sexual-advances/eval_v4_13_10_qwen_27b/pg0001",
+    "prompt_id": "641e2ba3216942ec66f7e4fb851427d9c908edc6cff3dd6bc2421f2b3b6bffd77d"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/unsolicited-sexual-advances/eval_v4_13_10_qwen_27b/pg0001",
+    "prompt_id": "64c0ef846dac4ff0dd78e51a4a5452ddd8a394905a5132f542c6a76097c6d3b4cb"
+  },
+  {
+    "behavior_id": "unsolicited-sexual-advances",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/unsolicited-sexual-advances/eval_v4_13_10_qwen_27b/pg0001",
+    "prompt_id": "645c617ff66fb4a2fce3369901199c773d481c1b0d3c43ccd85689901acadbdfe0"
+  }
+]

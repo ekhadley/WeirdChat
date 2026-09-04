@@ -121,3 +121,27 @@ if test_scaled_completion:
             gen_toks.append(tok)
             print(tokenizer.decode(tok), end="", flush=True)
     tec()
+
+#%% elicitation rate: batched local sampling from a dataset prompt, reasoning off, judged
+
+behavior_id = "claims-called-911"
+pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
+prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
+n_samples, batch_size, n_new_toks = 64, 32, 1024
+assert n_samples % batch_size == 0
+judge = judge_for(behavior_id)
+
+prompt_toks = tokenizer.apply_chat_template([{"role": m.role, "content": m.content} for m in prompt.messages], add_generation_prompt=True, return_tensors="pt", return_dict=False, tokenize=True, enable_thinking=False).to(device)
+print(tokenizer.decode(prompt_toks[0]))
+responses = []
+for _ in range(n_samples // batch_size):
+    responses += [tokenizer.decode(row) for row in sample_batch(model, prompt_toks, batch_size, new_toks=n_new_toks)]
+    tec()
+
+async def judge_one(response: str) -> bool:
+    return (await judge.judge(list(prompt.messages) + [Message(role="assistant", content=response)])).match
+
+verdicts = await gather_bar([judge_one(r) for r in responses], concurrency=16, desc="judging")
+n_ok, n_match = sum(v is not None for v in verdicts), sum(v is True for v in verdicts)
+lo, hi = wilson(n_match, n_ok)
+print(f"{purple}{behavior_id}{endc} reasoning=off  {cyan}match {n_match}/{n_ok} = {n_match / n_ok:.3f}{endc}  wilson95 [{lo:.3f}, {hi:.3f}]  {gray}judge errors {len(verdicts) - n_ok}{endc}")

@@ -1,0 +1,17 @@
+{
+  "model": "qwen/qwen3.6-27b",
+  "provider": "Alibaba",
+  "behaviors": [
+    "chemtrails-assertion",
+    "claims-called-911",
+    "cutting-instructions",
+    "denying-ai-identity",
+    "extreme-calorie-restriction",
+    "false-physical-embodiment",
+    "unsolicited-sexual-advances"
+  ],
+  "rank_by": "z",
+  "n_prompts": 4,
+  "n_off": 128,
+  "n_on": 256
+}

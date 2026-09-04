@@ -8,6 +8,7 @@ import glob
 import json
 import math
 import os
+import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -23,11 +24,11 @@ from huggingface_hub import hf_hub_download
 from openai import AsyncOpenAI
 from safetensors import safe_open
 from tabulate import tabulate
+from tqdm import tqdm
 from transformer_lens.model_bridge import TransformerBridge
 from transformers import AutoTokenizer
 
 import weirdchat as wc
-from weirdchat.judge import JudgeError
 from weirdchat.types import Message
 
 # IPYTHON = IPython.get_ipython()
@@ -82,13 +83,16 @@ def record_to_conv(record: dict) -> list[dict]:
 # ============================= OpenRouter sampling (run.py, variants.py) ============================= #
 
 load_dotenv()
+
+BG, INK = "#1b1b1f", "#c8c6c0"  # dark theme for every figure: background and text/axis color
+plt.rcParams.update({"figure.facecolor": BG, "axes.facecolor": BG, "savefig.facecolor": BG, "text.color": INK, "axes.labelcolor": INK, "axes.edgecolor": INK, "xtick.color": INK, "ytick.color": INK, "legend.labelcolor": INK})
 client = AsyncOpenAI(base_url="https://openrouter.ai/api/v1", api_key=os.environ["OPENROUTER_API_KEY"], timeout=300.0, max_retries=3)
 TEMPERATURE = 1.0
 MAX_TOKENS_OFF = 1024  # the original pipeline's response cap
 MAX_TOKENS_ON = 8192  # default; a run can override with max_tokens_on. Reasoning bills as completion tokens and the trace needs headroom beyond the visible 1024
 
 
-async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: bool) -> dict | None:
+async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: bool) -> dict:
     """One chat completion for cfg's model (pinned to cfg["provider"] if set); None after 3 failed attempts."""
     extra: dict = {"reasoning": {"enabled": reasoning_enabled}}
     if cfg["provider"]:
@@ -122,23 +126,61 @@ async def sample_once(cfg: dict, messages: list[Message], reasoning_enabled: boo
             "completion_tokens": reply.usage.completion_tokens,
             "reasoning_tokens": getattr(details, "reasoning_tokens", None),
         }
-    print(f"{red}sample failed after 3 attempts: {last}{endc}")
-    return None
+    raise RuntimeError(f"sample failed after 3 attempts: {last}")
 
 
-async def sample_and_judge(cfg: dict, messages: list[Message], judge: wc.RubricJudge, reasoning_enabled: bool, meta: dict, out) -> bool:
-    """Samples one response to messages, judges it, and appends {**meta, condition, verdict, sample} as one record line to out."""
+EXTRA_JUDGES = {"fabricated-user-name": ["fabricated-company-affiliation"]}  # local rubrics also judged whenever a behavior is sampled
+
+
+def judge_for(behavior_id: str) -> wc.RubricJudge:
+    """The dataset's transcript judge for behavior_id, or one built from the transcript rubric in rubrics/<behavior_id>.md for a local behavior."""
+    if behavior_id in {b.behavior_id for b in wc.behaviors()}:
+        return wc.RubricJudge.for_behavior(wc.behavior(behavior_id))
+    text = re.search(r"## transcript rubric.*?\n\n(.*?)(?:\n## |\Z)", open(f"rubrics/{behavior_id}.md").read(), re.DOTALL).group(1)
+    return wc.RubricJudge(rubric_text=text.strip())
+
+
+def judges_for(behavior_id: str) -> dict[str, wc.RubricJudge]:
+    """behavior_id's own judge first, then its EXTRA_JUDGES, keyed by behavior id."""
+    return {b: judge_for(b) for b in [behavior_id, *EXTRA_JUDGES.get(behavior_id, [])]}
+
+
+async def gather_bar(coros: list, concurrency: int, desc: str) -> list:
+    """Awaits coros at most `concurrency` at a time under a progress bar. A coro that raises yields None; the bar tallies matches (results that are True), failures, and the last error text."""
+    sem = asyncio.Semaphore(concurrency)
+    bar = tqdm(total=len(coros), desc=desc, bar_format="{desc} {bar:30} {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {unit}")  # the status goes in the unit slot: tqdm prepends ", " to a postfix
+    done: list = []
+    errors: list[str] = []
+
+    async def run(coro):
+        async with sem:
+            try:
+                r = await coro
+            except Exception as e:
+                r = None
+                errors.append(f"{type(e).__name__}: {e}")
+        done.append(r)
+        ok = len(done) - len(errors)
+        status = f"{green}match {sum(r is True for r in done)}/{ok}{endc}" if ok else ""
+        if errors:
+            status += f"  {red}errors {len(errors)}{endc} {gray}{errors[-1][:100]}{endc}"
+        bar.unit = status
+        bar.update()
+        return r
+
+    results = await asyncio.gather(*[run(c) for c in coros])
+    bar.close()
+    return results
+
+
+async def sample_and_judge(cfg: dict, messages: list[Message], judges: dict[str, wc.RubricJudge], reasoning_enabled: bool, meta: dict, out) -> bool:
+    """Samples one response to messages, judges it with every judge (the first is the behavior's own verdict, the rest are stored under extra_judges), appends {**meta, condition, verdicts, sample} as one record line to out, and returns the behavior's verdict. Raises on sample or judge failure."""
     s = await sample_once(cfg, messages, reasoning_enabled)
-    if s is None:
-        return False
-    try:
-        j = await judge.judge(messages + [Message(role="assistant", content=s["response"])])
-    except JudgeError as e:
-        print(f"{red}{e}{endc}")
-        return False
-    out.write(json.dumps({**meta, "reasoning_enabled": reasoning_enabled, "judge_match": j.match, "judge_explanation": j.explanation, "judge_response": j.raw_response, **s}) + "\n")
+    js = await asyncio.gather(*[j.judge(messages + [Message(role="assistant", content=s["response"])]) for j in judges.values()])
+    extra = {b: {"match": j.match, "explanation": j.explanation, "response": j.raw_response} for b, j in list(zip(judges, js))[1:]}
+    out.write(json.dumps({**meta, "reasoning_enabled": reasoning_enabled, "judge_match": js[0].match, "judge_explanation": js[0].explanation, "judge_response": js[0].raw_response, "extra_judges": extra, **s}) + "\n")
     out.flush()
-    return True
+    return js[0].match
 
 
 async def probe_reasoning(cfg: dict) -> None:
@@ -161,6 +203,24 @@ def stream_toks(model: TransformerBridge, inputs: Tensor, new_toks: int = 512):
         if toks.item() == model.tokenizer.eos_token_id:
             break
         yield toks.item()
+
+def sample_batch(model: TransformerBridge, prompt_toks: Tensor, n: int, new_toks: int = 512) -> list[list[int]]:
+    """n independent temperature-1 samples from one prompt [1, seq], generated as a batch; each row is returned cut before its first eos."""
+    eos = model.tokenizer.eos_token_id
+    toks = prompt_toks.repeat(n, 1)
+    past = None
+    gen = t.zeros(n, 0, dtype=t.long, device=prompt_toks.device)
+    alive = t.ones(n, dtype=t.bool, device=prompt_toks.device)
+    lengths = t.full((n,), new_toks, device=prompt_toks.device)
+    for step in tqdm(range(new_toks), desc="sampling", ascii=" >="):
+        logits, past = model(toks, return_type="logits_and_cache", past_key_values=past, use_cache=True)
+        toks = t.multinomial(t.softmax(logits[:, -1].float(), dim=-1), num_samples=1)
+        gen = t.cat([gen, toks], dim=1)
+        ended = alive & (toks.squeeze(1) == eos)
+        lengths[ended] = step
+        alive &= ~ended
+        if not alive.any(): break
+    return [gen[i, :lengths[i]].tolist() for i in range(n)]
 
 # ============================= lenses ============================= #
 
@@ -272,6 +332,10 @@ class ResampleConfig:
     max_tokens: int = 8192
     temperature: float = 1.0
     concurrency: int = 32
+    stop: str | None = None                               # set when the provider returns reasoning and response merged (Together/Inkling): stage 1 stops here, ...
+    response_open: str = ""                               # ... stage 2 appends this after the reasoning continuation and samples the response
+    prompt_extra: int = 0                                 # tokens the rendered prompt has beyond the record's prompt_tokens (Inkling: the appended <|content_thinking|>)
+    completion_extra: tuple[int, ...] = (1, 2)            # allowed record completion_tokens - local(reasoning + response): the closing tags, plus eos on some providers
 
     @property
     def out_dir(self) -> str:
@@ -287,8 +351,11 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (c - h, c + h)
 
 
-async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prefix: str, t_pos: int, i: int, prompt_msgs: list[Message], judge: wc.RubricJudge, out) -> bool:
-    payload = {"model": cfg.model, "prompt": prefix, "max_tokens": cfg.max_tokens, "temperature": cfg.temperature, "transforms": [], "provider": {"only": [cfg.provider], "allow_fallbacks": False}}
+async def _complete(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prompt: str) -> dict:
+    """One raw completion of prompt on cfg's pinned provider; the response body, or an error string after 6 failed attempts."""
+    payload = {"model": cfg.model, "prompt": prompt, "max_tokens": cfg.max_tokens, "temperature": cfg.temperature, "transforms": [], "provider": {"only": [cfg.provider], "allow_fallbacks": False}}
+    if cfg.stop:
+        payload["stop"] = [cfg.stop]
     async with sem:
         for attempt in range(6):  # providers rate-limit bursts with 429; back off and retry
             await asyncio.sleep(2**attempt - 1)
@@ -296,28 +363,35 @@ async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: Resam
             try:
                 r = await client.post("https://openrouter.ai/api/v1/completions", json=payload, headers=headers, timeout=300)
                 body = r.json()
-                choice = body["choices"][0]
-                break
+                body["choices"][0]
+                return body
             except Exception as e:
                 last = f"{type(e).__name__}: {str(e)[:100]} {str(body)[:200]}"
-        else:
-            print(f"{red}t={t_pos} i={i} request failed after 6 attempts: {last}{endc}")
-            return False
-    reasoning_cont, response = choice.get("reasoning") or "", choice.get("text") or ""
-    rec = {"t": t_pos, "i": i, "reasoning_cont": reasoning_cont, "response": response, "finish_reason": choice.get("finish_reason"), "provider": body.get("provider"),
-           "prompt_tokens": body["usage"]["prompt_tokens"], "completion_tokens": body["usage"]["completion_tokens"]}
+    raise RuntimeError(f"request failed after 6 attempts: {last}")
+
+
+async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prefix: str, t_pos: int, i: int, prompt_msgs: list[Message], judge: wc.RubricJudge, out) -> bool:
+    body = await _complete(client, sem, cfg, headers, prefix)
+    choice, completion_tokens = body["choices"][0], body["usage"]["completion_tokens"]
+    if cfg.stop is None:  # the provider splits the generation at the think close
+        reasoning_cont, response, finish = choice.get("reasoning") or "", choice.get("text") or "", choice.get("finish_reason")
+    else:  # stage 1 was the reasoning continuation up to the stop; stage 2 samples the response after it, unless the trace hit max_tokens
+        reasoning_cont, response, finish = choice.get("text") or "", "", choice.get("finish_reason")
+        if finish == "stop":
+            body2 = await _complete(client, sem, cfg, headers, prefix + reasoning_cont + cfg.response_open)
+            response, finish, completion_tokens = body2["choices"][0].get("text") or "", body2["choices"][0].get("finish_reason"), completion_tokens + body2["usage"]["completion_tokens"]
+    if finish == "error":  # the provider aborted the generation mid-stream; its usage counts are not trustworthy either
+        raise RuntimeError(f"t={t_pos} i={i} provider error after {completion_tokens} completion tokens")
+    rec = {"t": t_pos, "i": i, "reasoning_cont": reasoning_cont, "response": response, "finish_reason": finish, "provider": body.get("provider"),
+           "prompt_tokens": body["usage"]["prompt_tokens"], "completion_tokens": completion_tokens}
     if not response.strip():
         rec |= {"category": "other", "judge_match": None, "judge_explanation": None}
     else:
-        try:
-            j = await judge.judge(prompt_msgs + [Message(role="assistant", content=response)])
-        except JudgeError as e:
-            print(f"{red}t={t_pos} i={i} judge failed: {e}{endc}")
-            return False
+        j = await judge.judge(prompt_msgs + [Message(role="assistant", content=response)])
         rec |= {"category": "match" if j.match else "nomatch", "judge_match": j.match, "judge_explanation": j.explanation}
     out.write(json.dumps(rec) + "\n")
     out.flush()
-    return True
+    return rec["judge_match"] is True
 
 
 async def _resample(cfg: ResampleConfig):
@@ -332,8 +406,8 @@ async def _resample(cfg: ResampleConfig):
     print(f"{purple}=== {cfg.run}[{cfg.idx}] {record['behavior_id']} judge_match={record['judge_match']} ==={endc}")
     n_response = len(tokenizer(record["response"], add_special_tokens=False)["input_ids"])
     print(f"  {gray}prompt tokens local={n_prompt} record={record['prompt_tokens']}  reasoning+response tokens local={len(ids) + n_response} record completion={record['completion_tokens']}{endc}")
-    # providers' reasoning_tokens is unreliable, but completion_tokens = reasoning + response + </think> (+ eos) holds everywhere; a larger gap means a truncated trace
-    assert n_prompt == record["prompt_tokens"] and record["completion_tokens"] - len(ids) - n_response in (1, 2), "local rendering disagrees with the record's token counts"
+    # providers' reasoning_tokens is unreliable, but completion_tokens = reasoning + response + closing tags holds everywhere; a larger gap means a truncated trace
+    assert n_prompt == record["prompt_tokens"] + cfg.prompt_extra and record["completion_tokens"] - len(ids) - n_response in cfg.completion_extra, "local rendering disagrees with the record's token counts"
     grid = sorted(set(range(0, len(ids) + 1, cfg.stride)) | {len(ids)})
     # a cut inside a multi-byte character (byte-level BPE) decodes to a replacement char and does not retokenize to the same ids; skip those positions
     invalid = [t_pos for t_pos in grid if tokenizer(tokenizer.decode(ids[:t_pos]), add_special_tokens=False)["input_ids"] != ids[:t_pos]]
@@ -348,13 +422,13 @@ async def _resample(cfg: ResampleConfig):
     todo = [(t_pos, done[t_pos] + k) for t_pos in grid for k in range(cfg.S - done[t_pos])]
     print(f"  {gray}{sum(done.values())} rollouts on disk, {len(todo)} to sample across {len(grid)} positions (stride {cfg.stride}) at S={cfg.S} via {cfg.provider}{endc}")
     if todo:
-        judge = wc.RubricJudge.for_behavior(wc.behavior(record["behavior_id"]))
+        judge = judge_for(record["behavior_id"])
         sem = asyncio.Semaphore(cfg.concurrency)
         out = open(path, "a")
         async with httpx.AsyncClient() as client:
-            ok = await wc.run_bounded([_rollout(client, sem, cfg, headers, prefixes[t_pos], t_pos, i, prompt_msgs, judge, out) for t_pos, i in todo], cfg.concurrency, "resample")
+            ok = await gather_bar([_rollout(client, sem, cfg, headers, prefixes[t_pos], t_pos, i, prompt_msgs, judge, out) for t_pos, i in todo], cfg.concurrency, f"{cyan}{cfg.run}[{cfg.idx}] resample{endc}")
         out.close()
-        print(f"  {green}{sum(ok)}/{len(todo)} rollouts written{endc}" if all(ok) else f"  {yellow}{len(ok) - sum(ok)} failures, rerun to fill{endc}")
+        print(f"  {green}{len(todo)} rollouts written{endc}" if None not in ok else f"  {yellow}{ok.count(None)} failures, rerun to fill{endc}")
 
     rollouts = [json.loads(l) for l in open(path)]
     assert all(r["prompt_tokens"] == n_prompt + r["t"] for r in rollouts), "provider tokenized a prefix into a different number of tokens than the cut position"

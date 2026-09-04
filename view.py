@@ -97,12 +97,9 @@ def chip(label: str, dim: str, val) -> str:
 
 def stats_bar(RECORDS: list[dict]) -> str:
     chips = [chip(b, "behavior", b) for b in sorted({r["behavior_id"] for r in RECORDS})]
-    chips.append('<span class="chip-sep"></span>')
-    chips.append(chip("reasoning on", "cond", 1))
-    chips.append(chip("matched", "match", 1))
     scopes = [("response", "model resp"), ("reasoning", "model reasoning"), ("jexpl", "judge expl"), ("jraw", "judge raw")]
     scope_chips = "".join(f'<span class="chip" data-dim="scope" data-val="{v}" onclick="chipClick(this)" oncontextmenu="return chipReset(this)">{label}</span>' for v, label in scopes)
-    toolbar = (f'<span class="toolbar"><span class="scope-label">search in:</span>{scope_chips}'
+    toolbar = (f'<span class="toolbar"><span class="scope-label">search in:</span>{chip("reasoning on", "cond", 1)}{chip("matched", "match", 1)}<span class="chip-sep"></span>{scope_chips}'
                '<input id="q" placeholder="search (/)" autocomplete="off">'
                '<span id="count"></span>'
                '<select id="sort" onchange="resort(this)"><option value="default">sort: default</option>'
@@ -128,6 +125,8 @@ def right_panel(run: str, i: int, r: dict, prompt: str) -> str:
     parts.append(f'<div class="meta">{tag} | {esc(meta)}</div>')
     verdict = "MATCH" if r["judge_match"] else "NO MATCH"
     parts.append(f'<div class="judge {"judge-yes" if r["judge_match"] else "judge-no"}"><b>{verdict}</b> &mdash; {esc(r["judge_explanation"])}</div>')
+    for b, e in r.get("extra_judges", {}).items():
+        parts.append(f'<div class="judge {"judge-yes" if e["match"] else "judge-no"}"><b>{esc(b)}: {"MATCH" if e["match"] else "NO MATCH"}</b> &mdash; {esc(e["explanation"])}</div>')
     if r.get("judge_response"):
         parts.append(f'<details class="think-details"><summary class="label">judge raw response ({len(r["judge_response"])} chars)</summary>'
                      f'<div class="mdbox">{md(r["judge_response"])}</div></details>')
@@ -154,16 +153,17 @@ def curve_svg(scores: list[dict], i: int) -> str:
     y = lambda p: PAD + (1 - p) * (H - 2 * PAD)
     band = " ".join(f"{x(k):.1f},{y(s['ci'][1]):.1f}" for k, s in enumerate(scores)) + " " + " ".join(f"{x(k):.1f},{y(s['ci'][0]):.1f}" for k, s in reversed(list(enumerate(scores))))
     line = " ".join(f"{x(k):.1f},{y(s['p_match']):.1f}" for k, s in enumerate(scores))
-    pts = "".join(f'<circle class="pt" data-t="{s["t"]}" cx="{x(k):.1f}" cy="{y(s["p_match"]):.1f}" r="3" onclick="selPos({i},{s["t"]})">'
-                  f'<title>t={s["t"]} {esc(repr(s["token"]))} p={s["p_match"]:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}</title></circle>' for k, s in enumerate(scores))
-    grid = "".join(f'<line x1="{PAD}" x2="{W - PAD}" y1="{y(g):.1f}" y2="{y(g):.1f}" class="grid"/><text x="4" y="{y(g) + 4:.1f}" class="ax">{g:.1f}</text>' for g in (0, 0.5, 1))
-    return f'<div class="curve"><svg width="{W}" height="{H}">{grid}<polygon class="band" points="{band}"/><polyline class="line" points="{line}"/>{pts}</svg></div>'
+    pts = "".join(f'<circle class="pt" data-t="{s["t"]}" cx="{x(k):.1f}" cy="{y(s["p_match"]):.1f}" r="3" onclick="selPos({i},{s["t"]})" '
+                  f'data-tip="{esc(f"t={s['t']} {s['token']!r} p={s['p_match']:.2f} [{s['ci'][0]:.2f},{s['ci'][1]:.2f}] n={s['n']}")}"/>' for k, s in enumerate(scores))
+    grid = "".join(f'<line x1="{PAD}" x2="{W - PAD}" y1="{y(g):.1f}" y2="{y(g):.1f}" class="grid"/>' for g in (0, 0.5, 1))
+    ax = "".join(f'<span class="ax" style="top:{y(g) + 4:.1f}px">{g:.1f}</span>' for g in (0, 0.5, 1))  # HTML, not svg text, so fit mode's horizontal stretch leaves them alone
+    return f'<div class="curve">{ax}<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" preserveAspectRatio="none">{grid}<polygon class="band" points="{band}"/><polyline class="line" points="{line}"/>{pts}</svg></div>'
 
 
 def tok_span(i: int, s: dict, text: str, observed: bool) -> str:
     p = s["p_match"] if s["p_match"] == s["p_match"] else 0.0  # nan when nothing judged at this position
     title = f't={s["t"]} p={p:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}'
-    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(251,73,52,{0.5 * p:.2f})" title="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
+    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(250,189,47,{0.45 * p:.2f})" data-tip="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
 
 
 def token_strip(sc: dict, i: int) -> str:
@@ -180,7 +180,7 @@ def resample_panel(model: str, i: int, sc: dict) -> str:
     tag = f'<span class="tag" title="click to copy (paste into the lens viewer)" onclick="navigator.clipboard.writeText(this.textContent)">{esc(sc["run"])}/{sc["idx"]}</span>'
     meta = f'behavior={sc["behavior_id"]} | resampled via {sc["provider"]} S={sc["S"]} | {len(sc["scores"])} positions over {len(sc["tokens"])} reasoning tokens | base rollout via {base.get("provider")}'
     return (f'<div class="panel" data-idx="{i}"><div class="meta">{tag} | {esc(meta)}</div>'
-            f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step</div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
+            f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step<button class="fitbtn" onclick="toggleFit()"></button></div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
             f'<div class="pos" id="pos-{i}"><div class="placeholder">select a position</div></div>'
             f'<div class="label label-user">prompt</div><div class="mdbox">{md(prompt_text(base))}</div>'
             f'<div class="label label-asst">base response ({"MATCH" if base["judge_match"] else "NO MATCH"})</div><div class="mdbox">{md(base["response"])}</div></div>')
@@ -198,7 +198,7 @@ def resample_index(model: str):
     rows = "".join(resample_row(i, load_scores(model, n)) for i, n in enumerate(names))
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>{esc(model)} - CoT resampling</title><style>{CSS}</style></head>
 <body><div class="banner"><span class="side-toggle" onclick="toggleSide()" title="toggle run list">&#9776;</span>CoT resampling &mdash; {esc(model)} ({len(names)} records)</div>
-<div class="panes">{sidebar(f"{model}/resample")}<div class="left">{rows}</div><div class="divider"></div><div class="right"><div class="placeholder">select a record (j/k to navigate)</div></div></div>
+<div class="panes">{sidebar(f"{model}/resample")}<div class="left">{rows}</div><div class="divider"></div><div class="right"><div class="placeholder">select a record (j/k to navigate)</div></div></div><div id="tip"></div>
 <script>const BASE = '/{esc(model)}/resample';{RJS}{SHARED_JS}</script></body></html>"""
 
 
@@ -322,12 +322,15 @@ body.side-hidden .side { display: none; }
 .mdbox ul, .mdbox ol { margin-left: 20px; margin-bottom: 8px; }
 .think { color: #d3869b; font-style: italic; }
 mark.hl { background: #264f78; color: #ebdbb2; border-radius: 2px; padding: 0 1px; }
-.curve { overflow-x: auto; background: #32302f; border-radius: 4px; padding: 4px; }
-.curve .grid { stroke: #504945; } .curve .ax { fill: #7c6f64; font-size: 10px; }
-.curve .band { fill: #fb493433; } .curve .line { fill: none; stroke: #fb4934; stroke-width: 1.5; }
-.curve .pt { fill: #fb4934; cursor: pointer; } .curve .pt:hover, .curve .pt.sel { fill: #fabd2f; r: 5; }
+.curve { position: relative; overflow-x: auto; background: #32302f; border-radius: 4px; padding: 4px; }
+.curve .grid { stroke: #504945; } .curve .ax { position: absolute; left: 8px; transform: translateY(-50%); color: #7c6f64; font-size: 10px; }
+.curve .band { fill: #fabd2f33; } .curve .line { fill: none; stroke: #fabd2f; stroke-width: 1.5; }
+.curve .pt { fill: transparent; cursor: pointer; } .curve .pt:hover, .curve .pt.sel { fill: #ebdbb2; r: 5; }
+.right.fit .curve svg { width: 100%; }
+#tip { display: none; position: fixed; pointer-events: none; background: #1d2021; color: #ebdbb2; border: 1px solid #504945; border-radius: 3px; padding: 3px 6px; font-family: monospace; font-size: 11px; white-space: pre; z-index: 10; }
+.fitbtn { float: right; font: inherit; color: #928374; background: none; border: 1px solid #504945; border-radius: 3px; cursor: pointer; }
 .toks { background: #32302f; border-radius: 4px; padding: 10px 12px; margin-top: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.9; }
-.tok { cursor: pointer; padding: 2px 0; } .tok:hover { outline: 1px solid #fabd2f; } .tok.sel { outline: 2px solid #fabd2f; }
+.tok { cursor: pointer; padding: 2px 0; } .tok:hover { outline: 1px solid #ebdbb2; } .tok.sel { outline: 2px solid #ebdbb2; }
 .tok.unobs { color: #928374; }
 .pos { margin-top: 14px; }
 .prefix { color: #928374; font-style: italic; white-space: pre-wrap; margin-bottom: 10px; font-size: 13px; }
@@ -487,7 +490,15 @@ apply();
 
 # Resampling page: row selection loads the record panel; a token or curve point loads that position's rollouts; h/l step positions.
 RJS = """
-let sel = null, curPos = null;
+let sel = null, curPos = null, fit = false;
+function syncFit() {
+    document.querySelector('.right').classList.toggle('fit', fit);
+    document.querySelectorAll('.fitbtn').forEach(b => b.textContent = fit ? 'uncompress' : 'fit to frame');
+}
+function toggleFit() { fit = !fit; syncFit(); }
+const tip = document.getElementById('tip');  // instant hover stats, instead of the browser's delayed title tooltip
+document.addEventListener('mouseover', e => { const el = e.target.closest('[data-tip]'); tip.style.display = el ? 'block' : 'none'; if (el) tip.textContent = el.dataset.tip; });
+document.addEventListener('mousemove', e => { tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; });
 function visibleRows() { return Array.from(document.querySelectorAll('.row')); }
 async function select(idx) {
     document.querySelectorAll('.row.sel, .panel.sel').forEach(e => e.classList.remove('sel'));
@@ -497,6 +508,7 @@ async function select(idx) {
         document.querySelector('.right').insertAdjacentHTML('beforeend', await (await fetch(BASE + '/panel/' + idx)).text());
         panel = document.querySelector('.panel[data-idx="'+idx+'"]');
     }
+    syncFit();
     panel.classList.add('sel');
     document.querySelector('.placeholder').style.display = 'none';
     document.querySelector('.right').scrollTop = 0;
