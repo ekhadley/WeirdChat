@@ -336,10 +336,11 @@ class ResampleConfig:
     response_open: str = ""                               # ... stage 2 appends this after the reasoning continuation and samples the response
     prompt_extra: int = 0                                 # tokens the rendered prompt has beyond the record's prompt_tokens (Inkling: the appended <|content_thinking|>)
     completion_extra: tuple[int, ...] = (1, 2)            # allowed record completion_tokens - local(reasoning + response): the closing tags, plus eos on some providers
+    tag: str = ""                                         # suffix on the output dir name, to keep a second run of the same record separate
 
     @property
     def out_dir(self) -> str:
-        return os.path.join("results", self.run.split("/")[0], "resample", f"{self.run.split('/')[1]}_{self.idx}")
+        return os.path.join("results", self.run.split("/")[0], "resample", f"{self.run.split('/')[1]}_{self.idx}{self.tag}")
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -456,7 +457,7 @@ async def _resample(cfg: ResampleConfig):
     ax.set_title(f"{cfg.run}[{cfg.idx}] {record['behavior_id']}  S={cfg.S} stride={cfg.stride} via {cfg.provider}")
     fig.tight_layout()
     os.makedirs("figures", exist_ok=True)
-    fig_path = f"figures/resample_{cfg.run.split('/')[1]}_{cfg.idx}.png"
+    fig_path = f"figures/resample_{os.path.basename(cfg.out_dir)}.png"
     fig.savefig(fig_path, dpi=150)
     print(f"  {green}figure saved to {fig_path}{endc}")
 

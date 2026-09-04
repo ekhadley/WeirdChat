@@ -16,11 +16,11 @@ sys.path.insert(0, os.path.dirname(hf_hub_download("deepseek-ai/DeepSeek-V4-Flas
 from encoding_dsv4 import encode_messages  # DeepSeek ships its prompt encoder as a script instead of a Jinja template
 
 cfg = ResampleConfig(
-    # run="deepseek-v4-flash/dv4f_smoke", idx=128,
-    run="deepseek-v4-flash/dv4f_full_elo", idx=26573,
+    run="deepseek-v4-flash/dv4f_smoke", idx=128,
+    # run="deepseek-v4-flash/dv4f_full_elo", idx=26573,
     model="deepseek/deepseek-v4-flash", provider="deepinfra", tokenizer="deepseek-ai/DeepSeek-V4-Flash",
     render_prompt=lambda tok, msgs: encode_messages([{"role": m.role, "content": m.content} for m in msgs], "thinking"),  # ends with <｜Assistant｜><think>
-    S=25, stride=1,
+    S=50, stride=1, tag="_s50",
 )
 
 if __name__ == "__main__":

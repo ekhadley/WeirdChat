@@ -192,6 +192,13 @@ def rollout_card(r: dict) -> str:
             f'<div class="think cont">{esc(r["reasoning_cont"])}</div><div class="mdbox resp">{md(r["response"])}</div></div>')
 
 
+def rollout_group(cls: str, txt: str, rolls: list[dict]) -> str:
+    if not rolls:
+        return ""
+    return (f'<details class="think-details" open><summary class="label"><span class="b {cls}">{len(rolls)}</span> {txt}</summary>'
+            f'{"".join(rollout_card(r) for r in rolls)}</details>')
+
+
 @app.route("/<model>/resample")
 def resample_index(model: str):
     names = resample_names(model)
@@ -212,10 +219,11 @@ def resample_pos(model: str, i: int, t: int):
     name = resample_names(model)[i]
     sc = load_scores(model, name)
     s = next(s for s in sc["scores"] if s["t"] == t)
-    rolls = sorted((r for r in (json.loads(l) for l in open(f"results/{model}/resample/{name}/rollouts.jsonl")) if r["t"] == t), key=lambda r: r["category"] != "match")
+    rolls = [r for r in (json.loads(l) for l in open(f"results/{model}/resample/{name}/rollouts.jsonl")) if r["t"] == t]
     prefix = esc("".join(sc["tokens"][:t])) or "(empty prefix: sampling starts right after &lt;think&gt;)"
+    groups = "".join(rollout_group(cls, txt, [r for r in rolls if r["category"] == cat]) for cat, cls, txt in (("match", "b-match", "matches"), ("nomatch", "b-nomatch", "non-matches"), ("other", "b-off", "other")))
     return (f'<div class="label label-think">t={t} &mdash; p={s["p_match"]:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] &mdash; {s["match"]} match / {s["nomatch"]} no / {s["other"]} other</div>'
-            f'<div class="mdbox prefix">{prefix}</div>{"".join(rollout_card(r) for r in rolls)}')
+            f'<div class="mdbox prefix">{prefix}</div>{groups}')
 
 
 @app.route("/")

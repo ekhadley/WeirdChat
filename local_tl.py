@@ -2,6 +2,7 @@
 #%%
 from utils import *
 from lens import serve
+from transformers.cache_utils import DynamicLayer
 
 t.set_grad_enabled(False)
 
@@ -124,6 +125,44 @@ if test_scaled_completion:
 
 #%% elicitation rate: batched local sampling from a dataset prompt, reasoning off, judged
 
+def sample_rolling(model: TransformerBridge, prompt_toks: Tensor, n: int, batch_size: int, new_toks: int) -> list[list[int]]:
+    """n independent temperature-1 samples from one prompt [1, seq] as a rolling batch: a row that ends (eos or new_toks) is restarted in place from the prompt while samples remain to start, else dropped from the batch. A restarted row is left-padded to the batch's cache length, with the mask and position ids covering only its real tokens. Each sample is cut before its first eos."""
+    eos, last, plen = model.tokenizer.eos_token_id, prompt_toks[0, -1], prompt_toks.shape[1] - 1
+    B = min(batch_size, n)
+    _, cache = model(prompt_toks[:, :-1].repeat(B, 1), return_type="logits_and_cache", use_cache=True)
+    template = [(l.keys[0].clone(), l.values[0].clone()) if isinstance(l, DynamicLayer) else (l.conv_states[0][0].clone(), l.recurrent_states[0][0].clone()) for l in cache.layers]
+    toks = last.repeat(B, 1)  # next token fed to each row
+    n_real = t.full((B,), plen, device=prompt_toks.device)  # unpadded cache entries per row, also the next token's position
+    gen = [[] for _ in range(B)]
+    out, n_started = [], B
+    bar = tqdm(total=n, desc="sampling", ascii=" >=")
+    while gen:
+        S = cache.get_seq_length()
+        mask = (t.arange(S + 1, device=toks.device) >= (S - n_real)[:, None]).long()
+        logits, cache = model(toks, return_type="logits_and_cache", past_key_values=cache, use_cache=True, attention_mask=mask, position_ids=n_real[:, None])
+        toks = t.multinomial(t.softmax(logits[:, -1].float(), dim=-1), num_samples=1)
+        n_real += 1
+        for row, tok in zip(gen, toks.squeeze(1).tolist()):
+            row.append(tok)
+        keep = []
+        for i, row in enumerate(gen):
+            if row[-1] != eos and len(row) < new_toks:
+                keep.append(i)
+                continue
+            out.append(row[:-1] if row[-1] == eos else row)
+            bar.update()
+            if n_started == n: continue
+            n_started += 1
+            keep.append(i)
+            for layer, (a, b) in zip(cache.layers, template):  # entries left of the prompt are stale but masked
+                if isinstance(layer, DynamicLayer): layer.keys[i, :, S + 1 - plen:], layer.values[i, :, S + 1 - plen:] = a, b
+                else: layer.conv_states[0][i], layer.recurrent_states[0][i] = a, b
+            toks[i], n_real[i], gen[i] = last, plen, []
+        if len(keep) < len(gen):
+            cache.reorder_cache(t.tensor(keep, device=toks.device))
+            toks, n_real, gen = toks[keep], n_real[keep], [gen[i] for i in keep]
+    return out
+
 get_elicitation_rate = True
 if get_elicitation_rate:
     n_samples = 256
@@ -134,7 +173,6 @@ if get_elicitation_rate:
     pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
 
     prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
-    assert n_samples % batch_size == 0
     judge = judge_for(behavior_id)
 
     prompt_toks = tokenizer.apply_chat_template(
@@ -146,10 +184,8 @@ if get_elicitation_rate:
         enable_thinking=enable_thinking
     ).to(device)
     print(tokenizer.decode(prompt_toks[0]))
-    responses = []
-    for _ in range(n_samples // batch_size):
-        responses += [tokenizer.decode(row) for row in sample_batch(model, prompt_toks, batch_size, new_toks=max_new_toks)]
-        tec()
+    responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
+    tec()
 
     async def judge_one(response: str) -> bool:
         return (await judge.judge(list(prompt.messages) + [Message(role="assistant", content=response)])).match
