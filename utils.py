@@ -245,6 +245,14 @@ def get_lens_logits(h: Tensor, layer: int, model: TransformerBridge, lens: dict)
     return model.unembed(model.ln_final(jlens_transport(h, lens, layer)))
 
 
+def get_lens_vec(token: str, layer: int, model: TransformerBridge, lens: dict) -> Tensor:
+    """Direction at `layer` whose dot product with the residual is the j-lens logit of `token` (up to ln_final's rms scaling)."""
+    ids = model.tokenizer.encode(token, add_special_tokens=False)
+    assert len(ids) == 1, f"{token!r} is {len(ids)} tokens: {ids}"
+    unembed_dir = model.ln_final.weight * model.W_U[:, ids[0]]
+    return unembed_dir @ lens["J"][layer].to(unembed_dir.device, unembed_dir.dtype)
+
+
 def get_template_idx(template: str, lens: dict) -> int:
     return lens["words"].index(template)
 
@@ -252,6 +260,11 @@ def get_template_idx(template: str, lens: dict) -> int:
 def get_template_vec(template: str, layer: int, lens: dict) -> Tensor:
     return lens["templates"][layer, get_template_idx(template, lens)]
 
+def gather_steer_template_vecs(templates: list[str], layer:int, tlens) -> Tensor:
+    return t.stack([get_template_vec(templ, layer, tlens).squeeze() for templ in templates], dim=0)
+
+def gather_steer_lens_vecs(toks: list[str], layer:int, model, jlens) -> Tensor:
+    return t.stack([get_lens_vec(tok, layer, model, jlens) for tok in toks], dim=0)
 
 def print_templates(tlens: dict, contains: str | None = None):
     for i, word in enumerate(tlens["words"]):
