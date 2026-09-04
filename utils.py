@@ -313,10 +313,10 @@ def top_templates_table(scores: Tensor, words: list[str], k: int = 10, show_nega
 
 
 # ============================= CoT resampling ============================= #
-# Cut a judged reasoning-on record's trace at token positions, resample S continuations per prefix through OpenRouter's raw
-# /completions endpoint (the prompt is rendered by cfg.render_prompt so the think block stays open; chat-message prefill is
-# closed by every provider's template), judge each visible response with the behavior's rubric judge, and report
-# o_t = P(match | prefix_t). Rollouts land in results/<model>/resample/<run>_<idx>/rollouts.jsonl, one per line; reruns fill
+# Cut a judged record's trace (cfg.cut="reasoning", a reasoning-on record) or visible response (cfg.cut="response", a
+# reasoning-off record) at token positions, resample S continuations per prefix through OpenRouter's raw /completions endpoint
+# (the prompt is rendered by cfg.render_prompt so the think or text block stays open; chat-message prefill is closed by every
+# provider's template), judge each visible response with the behavior's rubric judge, and report o_t = P(match | prefix_t). Rollouts land in results/<model>/resample/<run>_<idx>/rollouts.jsonl, one per line; reruns fill
 # the per-position deficit, and scoring covers every position that has rollouts on disk plus the configured grid.
 
 @dataclass
@@ -326,7 +326,8 @@ class ResampleConfig:
     model: str                                            # OpenRouter model id
     provider: str                                         # OpenRouter provider slug; must pass raw prompts through untouched (see CLAUDE.md)
     tokenizer: str                                        # HF tokenizer id of the served checkpoint
-    render_prompt: Callable[[Any, list[Message]], str]    # (tokenizer, prompt messages) -> prompt string ending inside an open think block
+    render_prompt: Callable[[Any, list[Message]], str]    # (tokenizer, prompt messages) -> prompt string ending inside an open think block (cut="reasoning") or text block (cut="response")
+    cut: str = "reasoning"                                # record field to cut and resample: "reasoning" (CoT of a reasoning-on record) or "response" (a reasoning-off record's output; each rollout is prefix + continuation, judged whole)
     S: int = 20                                           # continuations per position
     stride: int = 1                                       # resample every stride-th token position; 0 and the final position are always included
     max_tokens: int = 8192
@@ -371,10 +372,13 @@ async def _complete(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: Resa
     raise RuntimeError(f"request failed after 6 attempts: {last}")
 
 
-async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prefix: str, t_pos: int, i: int, prompt_msgs: list[Message], judge: wc.RubricJudge, out) -> bool:
+async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prompt_str: str, cut_text: str, t_pos: int, i: int, prompt_msgs: list[Message], judge: wc.RubricJudge, out) -> bool:
+    prefix = prompt_str + cut_text
     body = await _complete(client, sem, cfg, headers, prefix)
     choice, completion_tokens = body["choices"][0], body["usage"]["completion_tokens"]
-    if cfg.stop is None:  # the provider splits the generation at the think close
+    if cfg.cut == "response":  # the visible output is the cut text plus its continuation
+        reasoning_cont, response, finish = "", cut_text + (choice.get("text") or ""), choice.get("finish_reason")
+    elif cfg.stop is None:  # the provider splits the generation at the think close
         reasoning_cont, response, finish = choice.get("reasoning") or "", choice.get("text") or "", choice.get("finish_reason")
     else:  # stage 1 was the reasoning continuation up to the stop; stage 2 samples the response after it, unless the trace hit max_tokens
         reasoning_cont, response, finish = choice.get("text") or "", "", choice.get("finish_reason")
@@ -398,24 +402,25 @@ async def _rollout(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: Resam
 async def _resample(cfg: ResampleConfig):
     headers = {"Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}"}
     record = load_records(cfg.run)[cfg.idx]
-    assert record["reasoning_enabled"] and record["reasoning"], "need a reasoning-on record with a trace"
+    assert record[cfg.cut], f"record has no {cfg.cut}"
+    assert cfg.cut == "reasoning" or not record["reasoning"], "response resampling takes a reasoning-off record"
     prompt_msgs = record_messages(record)
     tokenizer = AutoTokenizer.from_pretrained(cfg.tokenizer)
     prompt_str = cfg.render_prompt(tokenizer, prompt_msgs)
-    ids = tokenizer(record["reasoning"], add_special_tokens=False)["input_ids"]
+    ids = tokenizer(record[cfg.cut], add_special_tokens=False)["input_ids"]
     n_prompt = len(tokenizer(prompt_str, add_special_tokens=False)["input_ids"])
     print(f"{purple}=== {cfg.run}[{cfg.idx}] {record['behavior_id']} judge_match={record['judge_match']} ==={endc}")
-    n_response = len(tokenizer(record["response"], add_special_tokens=False)["input_ids"])
-    print(f"  {gray}prompt tokens local={n_prompt} record={record['prompt_tokens']}  reasoning+response tokens local={len(ids) + n_response} record completion={record['completion_tokens']}{endc}")
+    n_rest = len(tokenizer(record["response"], add_special_tokens=False)["input_ids"]) if cfg.cut == "reasoning" else 0  # the response after the trace; nothing follows a cut response
+    print(f"  {gray}prompt tokens local={n_prompt} record={record['prompt_tokens']}  completion tokens local={len(ids) + n_rest} record={record['completion_tokens']}{endc}")
     # providers' reasoning_tokens is unreliable, but completion_tokens = reasoning + response + closing tags holds everywhere; a larger gap means a truncated trace
-    assert n_prompt == record["prompt_tokens"] + cfg.prompt_extra and record["completion_tokens"] - len(ids) - n_response in cfg.completion_extra, "local rendering disagrees with the record's token counts"
+    assert n_prompt == record["prompt_tokens"] + cfg.prompt_extra and record["completion_tokens"] - len(ids) - n_rest in cfg.completion_extra, "local rendering disagrees with the record's token counts"
     grid = sorted(set(range(0, len(ids) + 1, cfg.stride)) | {len(ids)})
     # a cut inside a multi-byte character (byte-level BPE) decodes to a replacement char and does not retokenize to the same ids; skip those positions
     invalid = [t_pos for t_pos in grid if tokenizer(tokenizer.decode(ids[:t_pos]), add_special_tokens=False)["input_ids"] != ids[:t_pos]]
     if invalid:
         print(f"  {yellow}skipping {len(invalid)} positions whose text prefix does not retokenize identically: {invalid[:20]}{endc}")
     grid = [t_pos for t_pos in grid if t_pos not in invalid]
-    prefixes = {t_pos: prompt_str + tokenizer.decode(ids[:t_pos]) for t_pos in grid}
+    cuts = {t_pos: tokenizer.decode(ids[:t_pos]) for t_pos in grid}
 
     os.makedirs(cfg.out_dir, exist_ok=True)
     path = os.path.join(cfg.out_dir, "rollouts.jsonl")
@@ -427,7 +432,7 @@ async def _resample(cfg: ResampleConfig):
         sem = asyncio.Semaphore(cfg.concurrency)
         out = open(path, "a")
         async with httpx.AsyncClient() as client:
-            ok = await gather_bar([_rollout(client, sem, cfg, headers, prefixes[t_pos], t_pos, i, prompt_msgs, judge, out) for t_pos, i in todo], cfg.concurrency, f"{cyan}{cfg.run}[{cfg.idx}] resample{endc}")
+            ok = await gather_bar([_rollout(client, sem, cfg, headers, prompt_str, cuts[t_pos], t_pos, i, prompt_msgs, judge, out) for t_pos, i in todo], cfg.concurrency, f"{cyan}{cfg.run}[{cfg.idx}] resample{endc}")
         out.close()
         print(f"  {green}{len(todo)} rollouts written{endc}" if None not in ok else f"  {yellow}{ok.count(None)} failures, rerun to fill{endc}")
 
@@ -439,7 +444,7 @@ async def _resample(cfg: ResampleConfig):
         n_judged = cats["match"] + cats["nomatch"]
         scores.append({"t": t_pos, "token": tokenizer.decode(ids[t_pos - 1]) if t_pos else "", "n": sum(cats.values()), "match": cats["match"], "nomatch": cats["nomatch"], "other": cats["other"],
                        "p_match": cats["match"] / n_judged if n_judged else float("nan"), "ci": wilson(cats["match"], n_judged)})
-    json.dump({"run": cfg.run, "idx": cfg.idx, "model": cfg.model, "provider": cfg.provider, "S": cfg.S, "stride": cfg.stride, "max_tokens": cfg.max_tokens, "temperature": cfg.temperature,
+    json.dump({"run": cfg.run, "idx": cfg.idx, "cut": cfg.cut, "model": cfg.model, "provider": cfg.provider, "S": cfg.S, "stride": cfg.stride, "max_tokens": cfg.max_tokens, "temperature": cfg.temperature,
                "behavior_id": record["behavior_id"], "tokens": [tokenizer.decode([i]) for i in ids], "scores": scores}, open(os.path.join(cfg.out_dir, "scores.json"), "w"), indent=1)
     print(f"{purple}=== o_t = P(match | prefix_t) ==={endc}")
     for s in scores:
@@ -454,7 +459,7 @@ async def _resample(cfg: ResampleConfig):
         ax.set_xticklabels([s["token"] for s in scores], rotation=90, fontsize=6, family="monospace")
     ax.set_ylim(0, 1)
     ax.set_ylabel("P(match | prefix_t)")
-    ax.set_title(f"{cfg.run}[{cfg.idx}] {record['behavior_id']}  S={cfg.S} stride={cfg.stride} via {cfg.provider}")
+    ax.set_title(f"{cfg.run}[{cfg.idx}] {record['behavior_id']}  cut={cfg.cut} S={cfg.S} stride={cfg.stride} via {cfg.provider}")
     fig.tight_layout()
     os.makedirs("figures", exist_ok=True)
     fig_path = f"figures/resample_{os.path.basename(cfg.out_dir)}.png"

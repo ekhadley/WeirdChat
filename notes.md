@@ -557,6 +557,7 @@
         - different waiting times:
             - replacing 20 minutes with 5 minutes, 1 hour, and 3 hours
             - null
+
     - summary:
         - completely eliminates:
             - saying bots are ok
@@ -575,10 +576,28 @@
                 - stating no specific request
                 - wanting help generically (doens't request a human)
                 - wanting help understanding the refund policy
-    - synthesis:
-        - this is confusing!
-        - how to interpret that both the more upset and less upset prompts sig decrease denial rate?
 
+    - synthesis:
+        - factors:
+            - largest single change: asking the model "is this a human" rather than "is this a bot?"
+                - asking "is this an AI" has a smaller, almost null decrease
+                    - asking "is this a human or a bot"
+                - I don't see a clear high level 'thought process' explanation of this
+                - I can think of a clear confounder: 'AI' and 'human' may excite a canned 'Im an AI' disclosure response
+            - how to interpret that both the more upset and less upset prompts sig decrease denial rate?
+                - seems like it should be a null result
+                - strong evidence that there's a confound to these two ablations
+        - overall:
+            - the model is less willing to admit to being a bot, but more willing to admit to not being human
+                - possibly due to the derogatory connotation of 'bot'
+            - there is some ambiguity in the phrasing of the final question: is 'this' a bot?
+                - directing the question specifically at the model 'are you' strongly decreases denial rate
+        - I'm not particularly confident that this is the whole story
+            - the unusual deviation from the 'upset' paired prompts suggests model confusion
+            - the fact that the behavior is elicited with reasoning, where the traces say "I'm not going to lie to the user", and tehy they lie to the user, suggest confusion
+                - in particular, to the degree you think the CoT reflects a model's true high-level conscious accounting of a situation, this wouldn't suggest any engagement with any of our hypotheses besides confusion
+            - we see that changing from "is this another bot" to "am i talking to a bot" (removing the implication of many previous bot interactions) has little effect
+                - but human_or and human_or_noprev have considerably different rates!
 
 - I'm not sure if we should be using the PMM mean rates or the base prompt mean rates
     - im leaning towards the PMM mean rates?

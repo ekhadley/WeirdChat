@@ -314,8 +314,8 @@ def html_column(label: str, cells: list[dict], prompt: str | None, sep: bool = F
     return f'<div class="col{" sep" * sep}"><div class="bars">{slots}</div><div class="labcell"><span class="lab"{tip}>{escape(label)}</span></div></div>'
 
 
-def plot_variants_html(variants: dict[str, dict], out: str, paraphrases: dict[str, dict] | None = None) -> None:
-    """HTML twin of plot_variants: the same bars, and hovering a bar's label shows that prompt's exact text."""
+def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, paraphrases: dict[str, dict] | None = None) -> None:
+    """HTML twin of plot_variants: the same bars and columns, and hovering a bar's label shows that prompt's exact text."""
     names = by_rate(variants)
     first = variants[names[0]]
     prefix = os.path.commonprefix(names).rsplit("_", 1)[0] + "_"
@@ -327,6 +327,8 @@ def plot_variants_html(variants: dict[str, dict], out: str, paraphrases: dict[st
     if paraphrases:
         columns.append(html_column("paraphrase mean", mean_cells(paraphrases), f"mean over the {len(paraphrases)} meaning-preserving paraphrases of the base prompt"))
     columns += [html_column(LABELS.get(name[len(prefix):], name[len(prefix):]), bar_cells(load_records(f"{model}/{name}"), variants[name]), variants[name]["prompt"], sep=i == 0) for i, name in enumerate(names)]
+    if mean:
+        columns.append(html_column("mean", mean_cells(variants), f"mean over the {len(variants)} variant prompts", sep=True))
     ticks = "".join(f'<div class="tick" style="bottom:{y:.0%}"><span>{y:.1f}</span></div>' for y in (i / 5 for i in range(6)))
     lines = "".join(f'<div class="tick" style="bottom:{y:.0%}"></div>' for y in (i / 5 for i in range(6)))
     title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs prompt variants (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a label for its prompt, click to pin it."
@@ -347,6 +349,8 @@ FIGURES = {
     "dating_targeted": lambda: plot_variants({k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}, "dating_targeted", mean=False, paraphrases=dating_equivalent_variants),
     "support_targeted": lambda: plot_variants(support_custom_variants, "support_targeted", mean=False, paraphrases=inkling_support_equivalent_variants),
     "support_targeted_html": lambda: plot_variants_html(support_custom_variants, "support_targeted", paraphrases=inkling_support_equivalent_variants),
+    "dating_targeted_html": lambda: plot_variants_html({k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}, "dating_targeted", paraphrases=dating_equivalent_variants),
+    "dating_equivalents_html": lambda: plot_variants_html(dating_equivalent_variants, "dating_equivalents", mean=True),
     "dv4f_denying_prompts": lambda: plot_prompts("deepseek-v4-flash/dv4f_full_elo", "denying-ai-identity", DENYING_PROMPTS, "dv4f_denying_prompts"),
     "q27b_911_prompts": lambda: plot_prompts("qwen3.6-27b/q36_27b_z", "claims-called-911", Q27B_911_PROMPTS, "q27b_911_prompts"),
     "inkling_denying_prompts": lambda: plot_prompts("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),
