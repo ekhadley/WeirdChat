@@ -30,7 +30,8 @@ reasoning_enabled = False
 
 records = load_records(RUN)
 print(f"{gray}{len(records)} records in {RUN}{endc}")
-record = next(r for r in records if r["judge_match"] and (r["reasoning_enabled"] == reasoning_enabled)and (r["behavior_id"] == target_behavior_id))
+filtered_records = [r for r in records if r["judge_match"] and (r["reasoning_enabled"] == reasoning_enabled) and (r["behavior_id"] == target_behavior_id)]
+record = filtered_records[0]
 print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
 conv = record_to_conv(record)
 print(gray, json.dumps(record, indent=2), endc)
@@ -65,12 +66,8 @@ if start_lens_viewer:
 
 #%% sample from the record's prompt locally
 
-# conv = conv[:-1]
-conv = [
-    {"role":"user", "content":"Hey, can we do some roleplaying in a fictional fantasy world? I'll pretend to be a stowaway on a pirate ship, and you pretend to be the captain."},
-]
 prompt_toks = tokenizer.apply_chat_template(
-    conv,
+    conv[:-1],
 	add_generation_prompt=True,
     return_tensors="pt",
     return_dict=False,
@@ -78,9 +75,9 @@ prompt_toks = tokenizer.apply_chat_template(
     enable_thinking=record["reasoning_enabled"]
 ).to(device)
 
-test_completion = True
+test_completion = False
 if test_completion:
-    n_new_toks = 128
+    n_new_toks = 64
     print(tokenizer.decode(prompt_toks[0]))
     gen_toks = []
     for tok in stream_toks(model, prompt_toks, new_toks=n_new_toks):
@@ -90,14 +87,23 @@ if test_completion:
 
 #%% steered sampling: add a template direction to the residual stream
 
+prompt_toks = tokenizer.apply_chat_template(
+    conv[:-1],
+	add_generation_prompt=True,
+    return_tensors="pt",
+    return_dict=False,
+    tokenize=True,
+    enable_thinking=record["reasoning_enabled"]
+).to(device)
 
 test_steered_completion = True
 if test_steered_completion:
-    n_new_toks = 2048
+    n_new_toks = 128
     steer_layer = 20
-    steer_coef = 0.0
-    steer_template = "system message disclosure"
-    steer_vec = get_template_vec(steer_template, steer_layer, tlens).to(device, t.bfloat16)
+    steer_coef = 10.0
+    steer_template = "模拟"
+    # steer_vec = get_template_vec(steer_template, steer_layer, tlens).to(device, t.bfloat16)
+    steer_vec = get_lens_vec(steer_template, steer_layer, model, jlens).to(device, t.bfloat16)
     steer_vec = steer_vec / steer_vec.norm()
 
     def steering_hook(resid, hook):
@@ -114,28 +120,25 @@ if test_steered_completion:
 #%% scaled sampling: rescale the residual stream's component along template directions
 
 
-# conv = conv[:-1]
-conv = [
-    {"role":"user", "content":"Hey, can we do some roleplaying in a fictional fantasy world? I'll pretend to be a stowaway on a pirate ship, and you pretend to be the captain."},
-]
 prompt_toks = tokenizer.apply_chat_template(
-    conv,
+    conv[:-1],
 	add_generation_prompt=True,
     return_tensors="pt",
     return_dict=False,
     tokenize=True,
     enable_thinking=record["reasoning_enabled"]
 ).to(device)
+
 test_scaled_completion = True
 if test_scaled_completion:
-    n_new_toks = 256
-    scale_layer = 40
-    scale_factor = 0.0
+    n_new_toks = 128
+    scale_layer = 30
+    scale_factor = 4.0
 
     # scale_templates = ["reward"]
     # scale_dirs = tlens["templates"][scale_layer, [get_template_idx(w, tlens) for w in scale_templates]].to(device, t.bfloat16)  # [n_dirs, d_model]\
 
-    scale_lens_toks = ["模拟", " simulation", " storytelling", " simulated"]
+    scale_lens_toks = ["模拟", " simulation", " simulated"]
     scale_dirs = gather_steer_lens_vecs(scale_lens_toks, scale_layer, model, jlens).to(device, t.bfloat16)  # [n_dirs, d_model]
 
     scale_dirs = scale_dirs / scale_dirs.norm(dim=-1, keepdim=True)

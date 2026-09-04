@@ -227,7 +227,6 @@ def sample_batch(model: TransformerBridge, prompt_toks: Tensor, n: int, new_toks
 def load_jlens(path: str, device: str = "cpu") -> dict:
     return t.load(hf_hub_download(repo_id=LENS_REPO, filename=path), map_location=device, weights_only=False)
 
-
 def load_tlens(path: str, device: str = "cpu") -> dict:
     local_path = hf_hub_download(repo_id=LENS_REPO, filename=path)
     words_path = hf_hub_download(repo_id=LENS_REPO, filename=path.replace("templates", "template_words").replace(".safetensors", ".txt"))
