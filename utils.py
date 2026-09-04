@@ -305,6 +305,12 @@ def gather_steer_template_vecs(templates: list[str], layer:int, tlens) -> Tensor
 def gather_steer_lens_vecs(toks: list[str], layer:int, model, jlens) -> Tensor:
     return t.stack([get_lens_vec(tok, layer, model, jlens) for tok in toks], dim=0)
 
+def scale_hooks(dirs_by_layer: dict[int, Tensor], factor: float) -> list[tuple[str, Callable]]:
+    """fwd_hooks that rescale the residual's projection onto span(dirs) by `factor` at each layer's hook_resid_pre (0 ablates). Directions are orthonormalized so correlated ones aren't double counted."""
+    def hook(resid, hook, Q):
+        return resid + (factor - 1) * ((resid @ Q) @ Q.T)
+    return [(f"blocks.{layer}.hook_resid_pre", functools.partial(hook, Q=t.linalg.qr(dirs.T.float())[0].to(dirs.dtype))) for layer, dirs in dirs_by_layer.items()]
+
 def print_templates(tlens: dict, contains: str | None = None):
     for i, word in enumerate(tlens["words"]):
         if contains is None or contains.lower() in word.lower():

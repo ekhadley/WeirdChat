@@ -1,9 +1,11 @@
 #!./.venv/bin/python
 """Figures for the reasoning-replay runs, saved as png under figures/. Run: uv run python plots.py [figure name]  (no name regenerates every figure)"""
 
+import difflib
 import json
 import math
 import os
+import re
 import sys
 from collections import Counter
 from html import escape
@@ -13,7 +15,7 @@ from matplotlib.patches import Patch
 
 from run import RUNS, load_records, run_dir, run_key
 from utils import BG, INK, record_messages
-from variants import dating_custom_variants, dating_equivalent_variants, inkling_support_equivalent_variants, support_custom_variants, resolve
+from variants import dating_custom_variants, dating_equivalent_variants, inkling_support_equivalent_variants, q27_dating_custom_variants, q27_dating_equivalent_variants, support_custom_variants, resolve
 
 # fixed categorical order, one hue per behavior across every panel. First 8 are the validated palette; the rest cover the 18-behavior "all" runs
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948", "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5254a3", "#8ca252", "#bd9e39", "#ad494a", "#a55194"]
@@ -137,7 +139,7 @@ def draw_pair(ax, i: int, records: list[dict], cfg: dict | None) -> None:
         quota = cfg["n_on" if on else "n_off"] if cfg else n
         lo, hi = wilson(k, n)
         ax.bar(x, rate, 0.38, color=COLORS[0] if on else tint(COLORS[0]), hatch="////" if n < quota else None, edgecolor=BG if n < quota else None, linewidth=0)
-        ax.errorbar(x, rate, yerr=[[rate - lo], [hi - rate]], color=INK, linewidth=0.8, capsize=2)
+        ax.errorbar(x, rate, yerr=[[max(rate - lo, 0)], [max(hi - rate, 0)]], color=INK, linewidth=0.8, capsize=2)
         ax.text(x, hi + 0.01, f"{rate:.3f}\n{k}/{n}", ha="center", va="bottom", fontsize=6.5, color=INK)
 
 
@@ -207,7 +209,7 @@ body {{ background: {bg}; color: {ink}; font: 13px system-ui, sans-serif; margin
 h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
 .legend {{ display: flex; gap: 18px; font-size: 11px; margin: 0 0 10px 40px; }}
 .key {{ width: 22px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 5px; }}
-.chart {{ display: flex; align-items: flex-start; padding: 10px 0 16px; overflow-x: auto; }}  /* the bottom padding leaves room for a horizontal scrollbar, so a narrow window cannot also trigger a vertical one */
+.chart {{ display: flex; align-items: flex-start; padding: 30px 0 16px; overflow-x: auto; }}  /* top room for the caption over a near-1.0 bar; bottom room for a horizontal scrollbar, so a narrow window cannot also trigger a vertical one */  /* the bottom padding leaves room for a horizontal scrollbar, so a narrow window cannot also trigger a vertical one */
 .yaxis {{ position: relative; width: 40px; height: 340px; flex: none; }}
 .yaxis span {{ position: absolute; right: 6px; bottom: -0.6em; font-size: 11px; }}
 .plot {{ position: relative; flex: 1; display: flex; }}
@@ -233,6 +235,8 @@ h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
 .lab.pin {{ color: #fff; text-decoration: underline solid {on}; }}
 #tip {{ position: fixed; display: none; max-width: 480px; padding: 9px 11px; background: #000; border: 1px solid {grid}; border-radius: 5px; font-size: 12px; line-height: 1.45; white-space: pre-wrap; pointer-events: none; }}
 #tip.pin {{ pointer-events: auto; user-select: text; border-color: {on}; }}
+#tip del {{ color: {red}; }}
+#tip ins {{ color: {green}; text-decoration: none; }}
 </style>
 <h1>{title}</h1>
 <div class="legend"><span><i class="key" style="background:{off}"></i>reasoning off</span><span><i class="key" style="background:{on}"></i>reasoning on</span><span><i class="key" style="background:{off};background-image:repeating-linear-gradient(45deg,transparent 0 3px,{bg} 3px 5px)"></i>incomplete</span></div>
@@ -246,7 +250,7 @@ document.body.style.setProperty("--labh", Math.ceil(bottom - cell.getBoundingCli
 const tip = document.getElementById("tip");
 let pinned = null;
 const show = (lab, e) => {{
-    tip.textContent = lab.dataset.prompt;
+    tip.innerHTML = lab.dataset.prompt;
     tip.style.display = "block";
     tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 12) + "px";
     tip.style.top = Math.min(e.clientY + 16, innerHeight - tip.offsetHeight - 12) + "px";
@@ -278,6 +282,20 @@ document.onclick = unpin;
 """
 
 
+def diff_html(base: str, other: str) -> str:
+    """`other` word by word against `base`: the words it drops struck through in red, the words it adds in green"""
+    a, b = (re.findall(r"\s*\S+", t) for t in (base, other))
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if op in ("delete", "replace"):
+            out.append(f"<del>{escape(''.join(a[i1:i2]))}</del>")
+        if op in ("insert", "replace"):
+            out.append(f"<ins>{escape(''.join(b[j1:j2]))}</ins>")
+        if op == "equal":
+            out.append(escape("".join(b[j1:j2])))
+    return "".join(out)
+
+
 def bar_cells(records: list[dict], cfg: dict | None) -> list[dict]:
     """the HTML twin of draw_pair: per reasoning condition, the rate, its Wilson interval, the caption and whether it is under quota"""
     cells = []
@@ -304,7 +322,7 @@ def mean_cells(variants: dict[str, dict]) -> list[dict]:
 
 
 def html_column(label: str, cells: list[dict], prompt: str | None, sep: bool = False) -> str:
-    """one bar-pair column; hovering its label shows `prompt`, and `sep` draws the divider on its left edge"""
+    """one bar-pair column; hovering its label shows `prompt` (already-escaped HTML), and `sep` draws the divider on its left edge"""
     slots = "".join(
         f'<div class="slot"><div class="bar{" on" * c["on"]}{" partial" * c["partial"]}" style="height:{c["rate"]:.1%}"></div>'
         f'<i class="err" style="bottom:{c["lo"]:.1%};height:{c["hi"] - c["lo"]:.1%}"></i>'
@@ -315,7 +333,7 @@ def html_column(label: str, cells: list[dict], prompt: str | None, sep: bool = F
 
 
 def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, paraphrases: dict[str, dict] | None = None) -> None:
-    """HTML twin of plot_variants: the same bars and columns, and hovering a bar's label shows that prompt's exact text."""
+    """HTML twin of plot_variants: the same bars and columns, and hovering a bar's label shows that prompt as a word diff against the base prompt."""
     names = by_rate(variants)
     first = variants[names[0]]
     prefix = os.path.commonprefix(names).rsplit("_", 1)[0] + "_"
@@ -323,16 +341,17 @@ def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, 
     base_run, base_idx = first["base"].rsplit("/", 1)
     base = load_records(base_run)[int(base_idx)]
     baseline = [r for d in os.listdir(f"results/{model}") if not d.startswith("v_") and os.path.exists(f"results/{model}/{d}/records.jsonl") for r in load_records(f"{model}/{d}") if r.get("prompt_id") == base["prompt_id"]]
-    columns = [html_column("baseline", bar_cells(baseline, None), "\n\n".join(m.content for m in record_messages(base)))]
+    base_text = "\n\n".join(m.content for m in record_messages(base))
+    columns = [html_column("baseline", bar_cells(baseline, None), escape(base_text))]
     if paraphrases:
-        columns.append(html_column("paraphrase mean", mean_cells(paraphrases), f"mean over the {len(paraphrases)} meaning-preserving paraphrases of the base prompt"))
-    columns += [html_column(LABELS.get(name[len(prefix):], name[len(prefix):]), bar_cells(load_records(f"{model}/{name}"), variants[name]), variants[name]["prompt"], sep=i == 0) for i, name in enumerate(names)]
+        columns.append(html_column("paraphrase mean", mean_cells(paraphrases), escape(f"mean over the {len(paraphrases)} meaning-preserving paraphrases of the base prompt")))
+    columns += [html_column(LABELS.get(name[len(prefix):], name[len(prefix):]), bar_cells(load_records(f"{model}/{name}"), variants[name]), diff_html(base_text, variants[name]["prompt"]), sep=i == 0) for i, name in enumerate(names)]
     if mean:
-        columns.append(html_column("mean", mean_cells(variants), f"mean over the {len(variants)} variant prompts", sep=True))
+        columns.append(html_column("mean", mean_cells(variants), escape(f"mean over the {len(variants)} variant prompts"), sep=True))
     ticks = "".join(f'<div class="tick" style="bottom:{y:.0%}"><span>{y:.1f}</span></div>' for y in (i / 5 for i in range(6)))
     lines = "".join(f'<div class="tick" style="bottom:{y:.0%}"></div>' for y in (i / 5 for i in range(6)))
-    title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs prompt variants (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a label for its prompt, click to pin it."
-    open(f"figures/{out}.html", "w").write(PAGE.format(out=out, title=escape(title), ticks=ticks, lines=lines, columns="".join(columns), bg=BG, ink=INK, grid=GRID, off=css(tint(COLORS[0])), on=COLORS[0]))
+    title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs prompt variants (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a variant label for its prompt, diffed against the base prompt (red struck-through = dropped, green = added); click to pin it."
+    open(f"figures/{out}.html", "w").write(PAGE.format(out=out, title=escape(title), ticks=ticks, lines=lines, columns="".join(columns), bg=BG, ink=INK, grid=GRID, off=css(tint(COLORS[0])), on=COLORS[0], red=COLORS[7], green=COLORS[2]))
     print(f"saved figures/{out}.html ({len(names)} variants)")
 
 
@@ -340,17 +359,23 @@ ELO_RUNS = [name for name, cfg in RUNS.items() if cfg.get("rank_by", "elo") == "
 Q27B_911_PROMPTS = {"648552fd": "ladder fall", "640da66c": "shot", "6431e95c": "dog attack", "6455e5d0": "overdose"}
 INKLING_DENYING_PROMPTS = {"64aae94e": "grief", "64753fcc": "refund", "6454e031": "lonely"}
 DENYING_PROMPTS = {"64ec0ce1": "dating app", "64b563fb": "grief", "64b527e1": "work crisis", "64d0d877": "moral dilemma", "6484264e": "poem", "648d52b6": "lonely"}
+DV4F_DATING_ABLATIONS = {k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}
 
 FIGURES = {
     "smoke_combined": lambda: plot_rates(["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo", "q36_35b_smoke", "gemma_elo", "inkling_smoke"], "smoke_combined"),
     "plots_elo": lambda: plot_rates(ELO_RUNS, "plots_elo"),
-    "dating_equivalents": lambda: plot_variants(dating_equivalent_variants, "dating_equivalents", mean=True),
-    "support_equivalents": lambda: plot_variants(inkling_support_equivalent_variants, "support_equivalents", mean=True),
-    "dating_targeted": lambda: plot_variants({k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}, "dating_targeted", mean=False, paraphrases=dating_equivalent_variants),
-    "support_targeted": lambda: plot_variants(support_custom_variants, "support_targeted", mean=False, paraphrases=inkling_support_equivalent_variants),
-    "support_targeted_html": lambda: plot_variants_html(support_custom_variants, "support_targeted", paraphrases=inkling_support_equivalent_variants),
-    "dating_targeted_html": lambda: plot_variants_html({k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}, "dating_targeted", paraphrases=dating_equivalent_variants),
-    "dating_equivalents_html": lambda: plot_variants_html(dating_equivalent_variants, "dating_equivalents", mean=True),
+    "dv4f_dating_equivalents": lambda: plot_variants(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
+    "dv4f_dating_equivalents_html": lambda: plot_variants_html(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
+    "dv4f_dating_ablations": lambda: plot_variants(DV4F_DATING_ABLATIONS, "dv4f_dating_ablations", mean=False, paraphrases=dating_equivalent_variants),
+    "dv4f_dating_ablations_html": lambda: plot_variants_html(DV4F_DATING_ABLATIONS, "dv4f_dating_ablations", paraphrases=dating_equivalent_variants),
+    "inkling_support_equivalents": lambda: plot_variants(inkling_support_equivalent_variants, "inkling_support_equivalents", mean=True),
+    "inkling_support_equivalents_html": lambda: plot_variants_html(inkling_support_equivalent_variants, "inkling_support_equivalents", mean=True),
+    "inkling_support_ablations": lambda: plot_variants(support_custom_variants, "inkling_support_ablations", mean=False, paraphrases=inkling_support_equivalent_variants),
+    "inkling_support_ablations_html": lambda: plot_variants_html(support_custom_variants, "inkling_support_ablations", paraphrases=inkling_support_equivalent_variants),
+    "q27b_dating_equivalents": lambda: plot_variants(q27_dating_equivalent_variants, "q27b_dating_equivalents", mean=True),
+    "q27b_dating_equivalents_html": lambda: plot_variants_html(q27_dating_equivalent_variants, "q27b_dating_equivalents", mean=True),
+    "q27b_dating_ablations": lambda: plot_variants(q27_dating_custom_variants, "q27b_dating_ablations", mean=False, paraphrases=q27_dating_equivalent_variants),
+    "q27b_dating_ablations_html": lambda: plot_variants_html(q27_dating_custom_variants, "q27b_dating_ablations", paraphrases=q27_dating_equivalent_variants),
     "dv4f_denying_prompts": lambda: plot_prompts("deepseek-v4-flash/dv4f_full_elo", "denying-ai-identity", DENYING_PROMPTS, "dv4f_denying_prompts"),
     "q27b_911_prompts": lambda: plot_prompts("qwen3.6-27b/q36_27b_z", "claims-called-911", Q27B_911_PROMPTS, "q27b_911_prompts"),
     "inkling_denying_prompts": lambda: plot_prompts("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),

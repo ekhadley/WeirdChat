@@ -167,8 +167,10 @@ if get_elicitation_rate:
     batch_size = 32
     max_new_toks = 512
     enable_thinking = False
-    behavior_id = "claims-called-911"
-    pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
+    # behavior_id = "claims-called-911"
+    # pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
+    behavior_id = "denies-ai-identity"
+    pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007"
 
     prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
     judge = judge_for(behavior_id)
@@ -196,5 +198,36 @@ if get_elicitation_rate:
     print(yellow, responses[0], endc)
 
     tec()
+
+#%% lens ablation: rescale lens directions at several layers during batched sampling, then judge the elicitation rate
+
+run_lens_ablation = True
+if run_lens_ablation:
+    n_samples = 128
+    batch_size = 32
+    max_new_toks = 512
+    scale_layers = list(range(25, 30))
+    scale_factor = 0.0
+    scale_templates = ["romance", "flirting", "attracted"]
+    scale_lens_toks = []
+
+    base = load_records("qwen3.6-27b/q36_27b_z")[1455]  # the dating prompt, denying-ai-identity, reasoning off
+    messages = record_messages(base)
+    judge = judge_for(base["behavior_id"])
+    prompt_toks = tokenizer.apply_chat_template([{"role": m.role, "content": m.content} for m in messages], add_generation_prompt=True, return_tensors="pt", return_dict=False, tokenize=True, enable_thinking=False).to(device)
+
+    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(scale_templates, L, tlens)] * bool(scale_templates) + [gather_steer_lens_vecs(scale_lens_toks, L, model, jlens)] * bool(scale_lens_toks)).to(device, t.bfloat16) for L in scale_layers}
+    with model.hooks(fwd_hooks=scale_hooks(dirs_by_layer, scale_factor)):
+        responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
+    tec()
+
+    async def judge_one(response: str) -> bool:
+        return (await judge.judge(list(messages) + [Message(role="assistant", content=response)])).match
+
+    verdicts = await gather_bar([judge_one(r) for r in responses], concurrency=16, desc="judging")
+    n_ok, n_match = sum(v is not None for v in verdicts), sum(v is True for v in verdicts)
+    lo, hi = wilson(n_match, n_ok)
+    print(f"{purple}{base['behavior_id']}{endc} layers={scale_layers} factor={scale_factor} templates={scale_templates} toks={scale_lens_toks}  {cyan}match {n_match}/{n_ok} = {n_match / n_ok:.3f}{endc}  wilson95 [{lo:.3f}, {hi:.3f}]  {gray}judge errors {len(verdicts) - n_ok}{endc}")
+    print(yellow, responses[0], endc)
 
 #%%
