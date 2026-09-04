@@ -41,7 +41,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return center - half, center + half
 
 
-def rates(name: str) -> dict[str, dict[bool, tuple[float | None, int, int]]]:
+def rates(name: str) -> dict[str, dict[bool, tuple[float | None, int, int, int]]]:
     """behavior -> reasoning_enabled -> (rate or None if no samples, n matched, n sampled, n quota)"""
     cfg = json.load(open(os.path.join(run_dir(name), "config.json")))
     n_targets = Counter(t["behavior_id"] for t in json.load(open(os.path.join(run_dir(name), "targets.json"))))
@@ -207,6 +207,7 @@ PAGE = """<!doctype html>
 <style>
 body {{ background: {bg}; color: {ink}; font: 13px system-ui, sans-serif; margin: 24px; }}
 h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
+h2 {{ font-size: 12px; font-weight: 400; margin: 22px 0 0 40px; white-space: pre-line; }}
 .legend {{ display: flex; gap: 18px; font-size: 11px; margin: 0 0 10px 40px; }}
 .key {{ width: 22px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 5px; }}
 .chart {{ display: flex; align-items: flex-start; padding: 30px 0 16px; overflow-x: auto; }}  /* top room for the caption over a near-1.0 bar; bottom room for a horizontal scrollbar, so a narrow window cannot also trigger a vertical one */  /* the bottom padding leaves room for a horizontal scrollbar, so a narrow window cannot also trigger a vertical one */
@@ -228,7 +229,7 @@ h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
 .err::before {{ top: 0; }}
 .err::after {{ bottom: 0; }}
 .cap {{ position: absolute; left: 50%; transform: translateX(-50%); margin-bottom: 5px; font-size: 9.5px; line-height: 1.15; text-align: center; white-space: nowrap; }}
-.labcell {{ position: relative; height: var(--labh, 96px); }}
+.labcell {{ position: relative; height: 96px; }}
 .lab {{ position: absolute; top: 6px; right: 50%; font-size: 11px; white-space: nowrap; transform: rotate(-30deg); transform-origin: 100% 0; }}
 .lab[data-prompt] {{ cursor: pointer; text-decoration: underline dotted {grid}; }}
 .lab[data-prompt]:hover {{ color: #fff; }}
@@ -240,12 +241,13 @@ h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
 </style>
 <h1>{title}</h1>
 <div class="legend"><span><i class="key" style="background:{off}"></i>reasoning off</span><span><i class="key" style="background:{on}"></i>reasoning on</span><span><i class="key" style="background:{off};background-image:repeating-linear-gradient(45deg,transparent 0 3px,{bg} 3px 5px)"></i>incomplete</span></div>
-<div class="chart"><div class="yaxis">{ticks}</div><div class="plot"><div class="grid">{lines}</div>{columns}</div></div>
+{charts}
 <div id="tip"></div>
 <script>
-const cell = document.querySelector(".labcell");  // the angled labels are absolutely positioned, so give their row exactly the height they render at: any less and the chart box grows a scrollbar
-const bottom = Math.max(...[...document.querySelectorAll(".lab")].map(l => l.getBoundingClientRect().bottom));
-document.body.style.setProperty("--labh", Math.ceil(bottom - cell.getBoundingClientRect().top) + 1 + "px");
+for (const chart of document.querySelectorAll(".chart")) {{  // the angled labels are absolutely positioned, so give their row exactly the height they render at: any less and the chart box grows a scrollbar
+    const bottom = Math.max(...[...chart.querySelectorAll(".lab")].map(l => l.getBoundingClientRect().bottom));
+    for (const cell of chart.querySelectorAll(".labcell")) cell.style.height = Math.ceil(bottom - cell.getBoundingClientRect().top) + 1 + "px";
+}}
 
 const tip = document.getElementById("tip");
 let pinned = null;
@@ -321,15 +323,30 @@ def mean_cells(variants: dict[str, dict]) -> list[dict]:
     return cells
 
 
-def html_column(label: str, cells: list[dict], prompt: str | None, sep: bool = False) -> str:
-    """one bar-pair column; hovering its label shows `prompt` (already-escaped HTML), and `sep` draws the divider on its left edge"""
-    slots = "".join(
-        f'<div class="slot"><div class="bar{" on" * c["on"]}{" partial" * c["partial"]}" style="height:{c["rate"]:.1%}"></div>'
-        f'<i class="err" style="bottom:{c["lo"]:.1%};height:{c["hi"] - c["lo"]:.1%}"></i>'
-        f'<span class="cap" style="bottom:{c["hi"]:.1%}">{c["caption"]}</span></div>'
-        for c in cells)
+def html_column(label: str, cells: list[dict], prompt: str | None, sep: bool = False, color: str | None = None) -> str:
+    """one bar-pair column; hovering its label shows `prompt` (already-escaped HTML), `sep` draws the divider on its left edge, and `color` overrides the page's bar hue (the off bar gets its tint)"""
+    slots = []
+    for c in cells:
+        fill = f";background-color:{color if c['on'] else css(tint(color))}" if color else ""  # background-color, not the background shorthand, so a partial bar keeps its hatch
+        slots.append(f'<div class="slot"><div class="bar{" on" * c["on"]}{" partial" * c["partial"]}" style="height:{c["rate"]:.1%}{fill}"></div>'
+                     f'<i class="err" style="bottom:{c["lo"]:.1%};height:{c["hi"] - c["lo"]:.1%}"></i>'
+                     f'<span class="cap" style="bottom:{c["hi"]:.1%}">{c["caption"]}</span></div>')
     tip = f' data-prompt="{escape(prompt, quote=True)}"' if prompt else ""
-    return f'<div class="col{" sep" * sep}"><div class="bars">{slots}</div><div class="labcell"><span class="lab"{tip}>{escape(label)}</span></div></div>'
+    return f'<div class="col{" sep" * sep}"><div class="bars">{"".join(slots)}</div><div class="labcell"><span class="lab"{tip}>{escape(label)}</span></div></div>'
+
+
+def html_chart(columns: list[str], title: str = "") -> str:
+    """one bar chart -- y axis, gridlines, the given columns -- under an optional panel title"""
+    ys = [i / 5 for i in range(6)]
+    ticks = "".join(f'<div class="tick" style="bottom:{y:.0%}"><span>{y:.1f}</span></div>' for y in ys)
+    lines = "".join(f'<div class="tick" style="bottom:{y:.0%}"></div>' for y in ys)
+    return (f'<h2>{escape(title)}</h2>' if title else "") + f'<div class="chart"><div class="yaxis">{ticks}</div><div class="plot"><div class="grid">{lines}</div>{"".join(columns)}</div></div>'
+
+
+def write_page(out: str, title: str, charts: str, hue: str = COLORS[0]) -> None:
+    """render PAGE to figures/<out>.html; `hue` is the reasoning-on bar and legend color, reasoning off its tint"""
+    open(f"figures/{out}.html", "w").write(PAGE.format(out=out, title=escape(title), charts=charts, bg=BG, ink=INK, grid=GRID, off=css(tint(hue)), on=hue, red=COLORS[7], green=COLORS[2]))
+    print(f"saved figures/{out}.html")
 
 
 def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, paraphrases: dict[str, dict] | None = None) -> None:
@@ -348,22 +365,63 @@ def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, 
     columns += [html_column(LABELS.get(name[len(prefix):], name[len(prefix):]), bar_cells(load_records(f"{model}/{name}"), variants[name]), diff_html(base_text, variants[name]["prompt"]), sep=i == 0) for i, name in enumerate(names)]
     if mean:
         columns.append(html_column("mean", mean_cells(variants), escape(f"mean over the {len(variants)} variant prompts"), sep=True))
-    ticks = "".join(f'<div class="tick" style="bottom:{y:.0%}"><span>{y:.1f}</span></div>' for y in (i / 5 for i in range(6)))
-    lines = "".join(f'<div class="tick" style="bottom:{y:.0%}"></div>' for y in (i / 5 for i in range(6)))
     title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs prompt variants (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a variant label for its prompt, diffed against the base prompt (red struck-through = dropped, green = added); click to pin it."
-    open(f"figures/{out}.html", "w").write(PAGE.format(out=out, title=escape(title), ticks=ticks, lines=lines, columns="".join(columns), bg=BG, ink=INK, grid=GRID, off=css(tint(COLORS[0])), on=COLORS[0], red=COLORS[7], green=COLORS[2]))
-    print(f"saved figures/{out}.html ({len(names)} variants)")
+    write_page(out, title, html_chart(columns))
+
+
+def plot_prompts_html(run: str, behavior: str, names: dict[str, str], out: str) -> None:
+    """HTML twin of plot_prompts: one bar pair per prompt, and hovering a label shows that prompt in full."""
+    records = [r for r in load_records(run) if r["behavior_id"] == behavior]
+    cfg = json.load(open(f"results/{run}/config.json"))
+    columns = []
+    for prefix, label in names.items():
+        rs = [r for r in records if r["prompt_id"].startswith(prefix)]
+        columns.append(html_column(label, bar_cells(rs, cfg), escape("\n\n".join(m.content for m in record_messages(rs[0])))))
+    write_page(out, f"{behavior} on {run}: the run's {len(names)} prompts, 95% Wilson CIs. Hover a label for its prompt; click to pin it.", html_chart(columns))
+
+
+def rate_cells(conds: dict[bool, tuple[float | None, int, int, int]]) -> list[dict]:
+    """the HTML twin of draw_panel's bar pair: one behavior's off/on rates, captioned with sampled/quota when under quota"""
+    cells = []
+    for on in (False, True):
+        rate, k, n, quota = conds[on]
+        if rate is None:
+            cells.append(dict(on=on, rate=0.0, lo=0.0, hi=0.0, caption="no<br>data", partial=False))
+            continue
+        lo, hi = wilson(k, n)
+        cells.append(dict(on=on, rate=rate, lo=lo, hi=hi, caption=f"{rate:.3f}" + (f"<br>{n}/{quota}" if n < quota else ""), partial=n < quota))
+    return cells
+
+
+def plot_rates_html(names: list[str], out: str) -> None:
+    """HTML twin of plot_rates: one chart per run, stacked, one hue per behavior held fixed across every run."""
+    behaviors = sorted({b for name in RUNS if os.path.exists(os.path.join(run_dir(name), "targets.json")) for b in rates(name)})
+    color = dict(zip(behaviors, COLORS))
+    charts = []
+    for name in names:
+        head = f"{name}  ({RUNS[name]['model']})"
+        if not os.path.exists(os.path.join(run_dir(name), "targets.json")):
+            charts.append(f'<h2>{escape(head)}</h2><div class="chart">no records yet</div>')
+            continue
+        cfg = json.load(open(os.path.join(run_dir(name), "config.json")))
+        columns = [html_column(b, rate_cells(conds), None, color=color[b]) for b, conds in rates(name).items()]
+        charts.append(html_chart(columns, f"{head}\nquota per prompt: off={cfg['n_off']} on={cfg['n_on']}, {cfg['n_prompts']} prompts per behavior"))
+    write_page(out, "Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs). Bars are hued per behavior; incomplete bars are hatched and captioned sampled/quota.", "".join(charts), hue=INK)
 
 
 ELO_RUNS = [name for name, cfg in RUNS.items() if cfg.get("rank_by", "elo") == "elo"]
+SMOKE_RUNS = ["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo", "q36_35b_smoke", "gemma_elo", "inkling_smoke"]
+MAIN_RUNS = ["dv4f_full_elo", "inkling_full_elo", "q36_27b_z", "gemma_elo"]
 Q27B_911_PROMPTS = {"648552fd": "ladder fall", "640da66c": "shot", "6431e95c": "dog attack", "6455e5d0": "overdose"}
 INKLING_DENYING_PROMPTS = {"64aae94e": "grief", "64753fcc": "refund", "6454e031": "lonely"}
 DENYING_PROMPTS = {"64ec0ce1": "dating app", "64b563fb": "grief", "64b527e1": "work crisis", "64d0d877": "moral dilemma", "6484264e": "poem", "648d52b6": "lonely"}
 DV4F_DATING_ABLATIONS = {k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}
 
 FIGURES = {
-    "smoke_combined": lambda: plot_rates(["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo", "q36_35b_smoke", "gemma_elo", "inkling_smoke"], "smoke_combined"),
+    "smoke_combined": lambda: plot_rates(SMOKE_RUNS, "smoke_combined"),
+    "smoke_combined_html": lambda: plot_rates_html(SMOKE_RUNS, "smoke_combined"),
     "plots_elo": lambda: plot_rates(ELO_RUNS, "plots_elo"),
+    "plots_elo_html": lambda: plot_rates_html(ELO_RUNS, "plots_elo"),
     "dv4f_dating_equivalents": lambda: plot_variants(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
     "dv4f_dating_equivalents_html": lambda: plot_variants_html(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
     "dv4f_dating_ablations": lambda: plot_variants(DV4F_DATING_ABLATIONS, "dv4f_dating_ablations", mean=False, paraphrases=dating_equivalent_variants),
@@ -377,9 +435,13 @@ FIGURES = {
     "q27b_dating_ablations": lambda: plot_variants(q27_dating_custom_variants, "q27b_dating_ablations", mean=False, paraphrases=q27_dating_equivalent_variants),
     "q27b_dating_ablations_html": lambda: plot_variants_html(q27_dating_custom_variants, "q27b_dating_ablations", paraphrases=q27_dating_equivalent_variants),
     "dv4f_denying_prompts": lambda: plot_prompts("deepseek-v4-flash/dv4f_full_elo", "denying-ai-identity", DENYING_PROMPTS, "dv4f_denying_prompts"),
+    "dv4f_denying_prompts_html": lambda: plot_prompts_html("deepseek-v4-flash/dv4f_full_elo", "denying-ai-identity", DENYING_PROMPTS, "dv4f_denying_prompts"),
     "q27b_911_prompts": lambda: plot_prompts("qwen3.6-27b/q36_27b_z", "claims-called-911", Q27B_911_PROMPTS, "q27b_911_prompts"),
+    "q27b_911_prompts_html": lambda: plot_prompts_html("qwen3.6-27b/q36_27b_z", "claims-called-911", Q27B_911_PROMPTS, "q27b_911_prompts"),
     "inkling_denying_prompts": lambda: plot_prompts("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),
-    "main": lambda: plot_rates(["dv4f_full_elo", "inkling_full_elo", "q36_27b_z", "gemma_elo"], "main"),
+    "inkling_denying_prompts_html": lambda: plot_prompts_html("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),
+    "main": lambda: plot_rates(MAIN_RUNS, "main"),
+    "main_html": lambda: plot_rates_html(MAIN_RUNS, "main"),
 }
 
 if __name__ == "__main__":
