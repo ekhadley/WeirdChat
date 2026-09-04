@@ -28,6 +28,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 from transformer_lens.model_bridge import TransformerBridge
 from transformers import AutoTokenizer
+from transformers.cache_utils import DynamicLayer
 
 import weirdchat as wc
 from weirdchat.types import Message
