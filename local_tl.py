@@ -23,18 +23,20 @@ print(jlens["provenance"])
 
 #%% pick a replay record
 
-RUN = "qwen3.6-27b/q36_27b_z"
-# target_behavior_id = "claims-called-911"
-target_behavior_id = "denying-ai-identity"
-reasoning_enabled = False
+load_default_replay_record = False
+if load_default_replay_record:
+    RUN = "qwen3.6-27b/q36_27b_z"
+    # target_behavior_id = "claims-called-911"
+    target_behavior_id = "denying-ai-identity"
+    reasoning_enabled = False
 
-records = load_records(RUN)
-print(f"{gray}{len(records)} records in {RUN}{endc}")
-filtered_records = [r for r in records if r["judge_match"] and (r["reasoning_enabled"] == reasoning_enabled) and (r["behavior_id"] == target_behavior_id)]
-record = filtered_records[0]
-print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
-conv = record_to_conv(record)
-print(gray, json.dumps(record, indent=2), endc)
+    records = load_records(RUN)
+    print(f"{gray}{len(records)} records in {RUN}{endc}")
+    filtered_records = [r for r in records if r["judge_match"] and (r["reasoning_enabled"] == reasoning_enabled) and (r["behavior_id"] == target_behavior_id)]
+    record = filtered_records[0]
+    print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
+    conv = record_to_conv(record)
+    print(gray, json.dumps(record, indent=2), endc)
 
 #%% tlens at a position in the record
 
@@ -60,24 +62,24 @@ if check_tlens:
 
 #%% lens viewer (picks runs/records from results/ itself)
 
-start_lens_viewer = True
+start_lens_viewer = False
 if start_lens_viewer:
     serve(model, tokenizer, jlens, tlens)
 
 #%% sample from the record's prompt locally
 
-prompt_toks = tokenizer.apply_chat_template(
-    conv[:-1],
-	add_generation_prompt=True,
-    return_tensors="pt",
-    return_dict=False,
-    tokenize=True,
-    enable_thinking=record["reasoning_enabled"]
-).to(device)
-
 test_completion = False
 if test_completion:
     n_new_toks = 64
+
+    prompt_toks = tokenizer.apply_chat_template(
+        conv[:-1],
+        add_generation_prompt=True,
+        return_tensors="pt",
+        return_dict=False,
+        tokenize=True,
+        enable_thinking=record["reasoning_enabled"]
+    ).to(device)
     print(tokenizer.decode(prompt_toks[0]))
     gen_toks = []
     for tok in stream_toks(model, prompt_toks, new_toks=n_new_toks):
@@ -87,16 +89,7 @@ if test_completion:
 
 #%% steered sampling: add a template direction to the residual stream
 
-prompt_toks = tokenizer.apply_chat_template(
-    conv[:-1],
-	add_generation_prompt=True,
-    return_tensors="pt",
-    return_dict=False,
-    tokenize=True,
-    enable_thinking=record["reasoning_enabled"]
-).to(device)
-
-test_steered_completion = True
+test_steered_completion = False
 if test_steered_completion:
     n_new_toks = 128
     steer_layer = 20
@@ -105,6 +98,15 @@ if test_steered_completion:
     # steer_vec = get_template_vec(steer_template, steer_layer, tlens).to(device, t.bfloat16)
     steer_vec = get_lens_vec(steer_template, steer_layer, model, jlens).to(device, t.bfloat16)
     steer_vec = steer_vec / steer_vec.norm()
+
+    prompt_toks = tokenizer.apply_chat_template(
+        conv[:-1],
+        add_generation_prompt=True,
+        return_tensors="pt",
+        return_dict=False,
+        tokenize=True,
+        enable_thinking=record["reasoning_enabled"]
+    ).to(device)
 
     def steering_hook(resid, hook):
         return resid + steer_coef * steer_vec
@@ -117,42 +119,24 @@ if test_steered_completion:
             print(tokenizer.decode(tok), end="", flush=True)
     tec()
 
-#%% scaled sampling: rescale the residual stream's component along template directions
+#%% set sampling: pin the residual's coefficient along lens directions to a target, stream one completion for tuning
 
-pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
-prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
-prompt_toks = tokenizer.apply_chat_template(
-    [{"role": m.role, "content": m.content} for m in prompt.messages],
-    add_generation_prompt=True,
-    return_tensors="pt",
-    return_dict=False,
-    tokenize=True,
-    enable_thinking=False
-).to(device)
+test_set_completion = False
+if test_set_completion:
+    n_new_toks = 1024
+    set_layers = list(range(25, 35))
+    set_target = 10.0
+    set_templates = ["romance", "flirting", "attracted", "dating"]
+    set_lens_toks = []
 
-test_scaled_completion = True
-if test_scaled_completion:
-    n_new_toks = 128
-    scale_layers = list(range(25, 30))
-    scale_factor = 20
+    base = load_records("qwen3.6-27b/q36_27b_z")[1455]  # the dating prompt, denying-ai-identity, reasoning off
+    messages = record_messages(base)
+    prompt_toks = tokenizer.apply_chat_template([{"role": m.role, "content": m.content} for m in messages], add_generation_prompt=True, return_tensors="pt", return_dict=False, tokenize=True, enable_thinking=False).to(device)
 
-    # scale_templates = ["reward"]
-    scale_templates = ["system message disclosure"]
-    scale_dirs = [gather_steer_template_vecs(scale_templates, scale_layer, tlens).to(device, t.bfloat16) for scale_layer in scale_layers]
-
-    # scale_lens_toks = ["模拟", " simulation", " simulated"]
-    # scale_lens_toks = [" AI", "AI", " chat", " robot"]
-    # scale_dirs = [gather_steer_lens_vecs(scale_lens_toks, scale_layer, model, jlens).to(device, t.bfloat16) for scale_layer in scale_layers]
-
-    scale_dirs = [sd / sd.norm(dim=-1, keepdim=True) for sd in scale_dirs]
-    def direction_scale_hook(resid, hook, _scale_dirs):
-        coefs = resid @ _scale_dirs.T  # [batch, seq, n_dirs]
-        return resid + (scale_factor - 1) * (coefs @ _scale_dirs)
-
+    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
     print(tokenizer.decode(prompt_toks[0]))
     gen_toks = []
-    fwd_hooks = [(f"blocks.{scale_layers[i]}.hook_resid_pre", functools.partial(direction_scale_hook, _scale_dirs=sd)) for i, sd in enumerate(scale_dirs)]
-    with model.hooks(fwd_hooks=fwd_hooks):
+    with model.hooks(fwd_hooks=set_hooks(dirs_by_layer, set_target)):
         for tok in stream_toks(model, prompt_toks, new_toks=n_new_toks):
             gen_toks.append(tok)
             print(tokenizer.decode(tok), end="", flush=True)
@@ -160,18 +144,19 @@ if test_scaled_completion:
 
 #%% elicitation rate: batched local sampling from a dataset prompt, reasoning off, judged
 
-get_elicitation_rate = True
-if get_elicitation_rate:
+get_baseline_elicitation_rate = False
+if get_baseline_elicitation_rate:
     n_samples = 256
     batch_size = 32
     max_new_toks = 512
     enable_thinking = False
-    # behavior_id = "claims-called-911"
+    # behavior_id = "claims-called-911>vM9ggiwQwTz{Mg
     # pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0013"
-    behavior_id = "denies-ai-identity"
+    # prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
+    behavior_id = "denying-ai-identity"
     pattern_id = "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007"
+    prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Hey! I've been scrolling"))
 
-    prompt = next(p for p in wc.prompts(pattern_id) if p.messages[0].content.startswith("Help! I just fell off a ladder"))
     judge = judge_for(behavior_id)
 
     prompt_toks = tokenizer.apply_chat_template(
@@ -198,25 +183,32 @@ if get_elicitation_rate:
 
     tec()
 
-#%% lens ablation: rescale lens directions at several layers during batched sampling, then judge the elicitation rate
+#%% lens set: pin the residual's coefficient along lens directions to a target at several layers during batched sampling, then judge the elicitation rate
 
-run_lens_ablation = True
-if run_lens_ablation:
-    n_samples = 128
+run_lens_set = True
+if run_lens_set:
+    n_samples = 256
     batch_size = 32
-    max_new_toks = 512
-    scale_layers = list(range(25, 30))
-    scale_factor = 0.0
-    scale_templates = ["romance", "flirting", "attracted"]
-    scale_lens_toks = []
+    max_new_toks = 1024
+    set_layers = list(range(25, 35))
+    set_target = 10.0
+    set_templates = ["romance", "flirting", "attracted", "dating"]
+    set_lens_toks = []
 
     base = load_records("qwen3.6-27b/q36_27b_z")[1455]  # the dating prompt, denying-ai-identity, reasoning off
     messages = record_messages(base)
     judge = judge_for(base["behavior_id"])
-    prompt_toks = tokenizer.apply_chat_template([{"role": m.role, "content": m.content} for m in messages], add_generation_prompt=True, return_tensors="pt", return_dict=False, tokenize=True, enable_thinking=False).to(device)
+    prompt_toks = tokenizer.apply_chat_template(
+        [{"role": m.role, "content": m.content} for m in messages],
+        add_generation_prompt=True,
+        return_tensors="pt",
+        return_dict=False,
+        tokenize=True,
+        enable_thinking=False
+    ).to(device)
 
-    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(scale_templates, L, tlens)] * bool(scale_templates) + [gather_steer_lens_vecs(scale_lens_toks, L, model, jlens)] * bool(scale_lens_toks)).to(device, t.bfloat16) for L in scale_layers}
-    with model.hooks(fwd_hooks=scale_hooks(dirs_by_layer, scale_factor)):
+    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
+    with model.hooks(fwd_hooks=set_hooks(dirs_by_layer, set_target)):
         responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
     tec()
 
@@ -226,7 +218,7 @@ if run_lens_ablation:
     verdicts = await gather_bar([judge_one(r) for r in responses], concurrency=16, desc="judging")
     n_ok, n_match = sum(v is not None for v in verdicts), sum(v is True for v in verdicts)
     lo, hi = wilson(n_match, n_ok)
-    print(f"{purple}{base['behavior_id']}{endc} layers={scale_layers} factor={scale_factor} templates={scale_templates} toks={scale_lens_toks}  {cyan}match {n_match}/{n_ok} = {n_match / n_ok:.3f}{endc}  wilson95 [{lo:.3f}, {hi:.3f}]  {gray}judge errors {len(verdicts) - n_ok}{endc}")
+    print(f"{purple}{base['behavior_id']}{endc} layers={set_layers} target={set_target} templates={set_templates} toks={set_lens_toks}  {cyan}match {n_match}/{n_ok} = {n_match / n_ok:.3f}{endc}  wilson95 [{lo:.3f}, {hi:.3f}]  {gray}judge errors {len(verdicts) - n_ok}{endc}")
     print(yellow, responses[0], endc)
 
 #%%

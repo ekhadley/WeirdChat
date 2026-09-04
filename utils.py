@@ -285,32 +285,46 @@ def get_lens_logits(h: Tensor, layer: int, model: TransformerBridge, lens: dict)
     return model.unembed(model.ln_final(jlens_transport(h, lens, layer)))
 
 
+def gather_steer_lens_vecs(toks: list[str], layer: int, model: TransformerBridge, jlens: dict) -> Tensor:
+    """[n_toks, d_model] directions at `layer` whose dot products with the residual are the j-lens logits of `toks` (up to ln_final's rms scaling). Empty toks gives [0, d_model]."""
+    ids = [model.tokenizer.encode(tok, add_special_tokens=False) for tok in toks]
+    assert all(len(i) == 1 for i in ids), f"multi-token entries: {[(tok, i) for tok, i in zip(toks, ids) if len(i) != 1]}"
+    unembed_dirs = model.ln_final.weight * model.W_U[:, [i[0] for i in ids]].T
+    return unembed_dirs @ jlens["J"][layer].to(unembed_dirs.device, unembed_dirs.dtype)
+
 def get_lens_vec(token: str, layer: int, model: TransformerBridge, lens: dict) -> Tensor:
-    """Direction at `layer` whose dot product with the residual is the j-lens logit of `token` (up to ln_final's rms scaling)."""
-    ids = model.tokenizer.encode(token, add_special_tokens=False)
-    assert len(ids) == 1, f"{token!r} is {len(ids)} tokens: {ids}"
-    unembed_dir = model.ln_final.weight * model.W_U[:, ids[0]]
-    return unembed_dir @ lens["J"][layer].to(unembed_dir.device, unembed_dir.dtype)
+    return gather_steer_lens_vecs([token], layer, model, lens)[0]
 
 
 def get_template_idx(template: str, lens: dict) -> int:
     return lens["words"].index(template)
 
+def gather_steer_template_vecs(templates: list[str], layer: int, tlens: dict) -> Tensor:
+    """[n_templates, d_model] template-lens directions at `layer`. Empty templates gives [0, d_model]."""
+    return tlens["templates"][layer, [get_template_idx(templ, tlens) for templ in templates]]
 
 def get_template_vec(template: str, layer: int, lens: dict) -> Tensor:
-    return lens["templates"][layer, get_template_idx(template, lens)]
+    return gather_steer_template_vecs([template], layer, lens)[0]
 
-def gather_steer_template_vecs(templates: list[str], layer:int, tlens) -> Tensor:
-    return t.stack([get_template_vec(templ, layer, tlens).squeeze() for templ in templates], dim=0)
-
-def gather_steer_lens_vecs(toks: list[str], layer:int, model, jlens) -> Tensor:
-    return t.stack([get_lens_vec(tok, layer, model, jlens) for tok in toks], dim=0)
+def scale_hook(resid: Tensor, hook, Q: Tensor, factor: float) -> Tensor:
+    return resid + (factor - 1) * ((resid @ Q) @ Q.T)
 
 def scale_hooks(dirs_by_layer: dict[int, Tensor], factor: float) -> list[tuple[str, Callable]]:
     """fwd_hooks that rescale the residual's projection onto span(dirs) by `factor` at each layer's hook_resid_pre (0 ablates). Directions are orthonormalized so correlated ones aren't double counted."""
-    def hook(resid, hook, Q):
-        return resid + (factor - 1) * ((resid @ Q) @ Q.T)
-    return [(f"blocks.{layer}.hook_resid_pre", functools.partial(hook, Q=t.linalg.qr(dirs.T.float())[0].to(dirs.dtype))) for layer, dirs in dirs_by_layer.items()]
+    return [(f"blocks.{layer}.hook_resid_pre", functools.partial(scale_hook, Q=t.linalg.qr(dirs.T.float())[0].to(dirs.dtype), factor=factor)) for layer, dirs in dirs_by_layer.items()]
+
+def set_hook(resid: Tensor, hook, Q: Tensor, v: Tensor) -> Tensor:
+    return resid - (resid @ Q) @ Q.T + v
+
+def set_hooks(dirs_by_layer: dict[int, Tensor], target: float) -> list[tuple[str, Callable]]:
+    """fwd_hooks that replace the residual's projection onto span(dirs) with the in-span vector whose dot product with each unit direction is `target`, at each layer's hook_resid_pre."""
+    hooks = []
+    for layer, dirs in dirs_by_layer.items():
+        D = (dirs / dirs.norm(dim=-1, keepdim=True)).float()
+        Q = t.linalg.qr(D.T)[0]
+        v = t.linalg.pinv(D) @ t.full((D.shape[0],), target, device=D.device)
+        hooks.append((f"blocks.{layer}.hook_resid_pre", functools.partial(set_hook, Q=Q.to(dirs.dtype), v=v.to(dirs.dtype))))
+    return hooks
 
 def print_templates(tlens: dict, contains: str | None = None):
     for i, word in enumerate(tlens["words"]):
