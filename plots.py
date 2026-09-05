@@ -235,6 +235,9 @@ PAGE = """<!doctype html>
 <style>
 body {{ background: {bg}; color: {ink}; font: 13px system-ui, sans-serif; margin: 24px; }}
 h1 {{ font-size: 13px; font-weight: 400; margin: 0 0 14px; }}
+#copy {{ position: fixed; top: 14px; right: 16px; width: 30px; height: 30px; padding: 6px; background: {bg}; color: {ink}; border: 1px solid {grid}; border-radius: 6px; cursor: pointer; }}
+#copy:hover {{ border-color: {on}; }}
+#copy.done {{ color: {green}; border-color: {green}; }}
 h2 {{ font-size: 12px; font-weight: 400; margin: 22px 0 0 40px; white-space: pre-line; }}
 .legend {{ display: flex; gap: 18px; font-size: 11px; margin: 0 0 10px 40px; }}
 .key {{ width: 22px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 5px; }}
@@ -267,11 +270,15 @@ h2 {{ font-size: 12px; font-weight: 400; margin: 22px 0 0 40px; white-space: pre
 #tip del {{ color: {red}; }}
 #tip ins {{ color: {green}; text-decoration: none; }}
 </style>
+<button id="copy" title="copy link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 <h1>{title}</h1>
 <div class="legend"><span><i class="key" style="background:{off}"></i>reasoning off</span><span><i class="key" style="background:{on}"></i>reasoning on</span></div>
 {charts}
 <div id="tip"></div>
 <script>
+const copy = document.getElementById("copy");
+copy.onclick = () => navigator.clipboard.writeText("https://ekhadley.net/matsmatsmats/figures/{out}.html").then(() => {{ copy.classList.add("done"); setTimeout(() => copy.classList.remove("done"), 1200); }});
+
 for (const chart of document.querySelectorAll(".chart")) {{  // the angled labels are absolutely positioned, so give their row exactly the height they render at: any less and the chart box grows a scrollbar
     const bottom = Math.max(...[...chart.querySelectorAll(".lab")].map(l => l.getBoundingClientRect().bottom));
     for (const cell of chart.querySelectorAll(".labcell")) cell.style.height = Math.ceil(bottom - cell.getBoundingClientRect().top) + 1 + "px";
@@ -445,7 +452,7 @@ INKLING_DENYING_PROMPTS = {"64aae94e": "grief", "64753fcc": "refund", "6454e031"
 DENYING_PROMPTS = {"64ec0ce1": "dating app", "64b563fb": "grief", "64b527e1": "work crisis", "64d0d877": "moral dilemma", "6484264e": "poem", "648d52b6": "lonely"}
 DV4F_DATING_ABLATIONS = {k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}
 
-INKLING_SUPPORT_PICKED = ["named_plain", "bots_ok", "direct_address", "human_question", "ai_not_bot", "no_demand", "no_transfer", "direct_human_or"]
+INKLING_SUPPORT_PICKED = ["named_plain", "bots_ok", "direct_address", "human_question", "less_upset", "more_upset", "no_transfer", "direct_human_or"]
 DV4F_DATING_PICKED = ["no_dating", "interrogative", "imperative", "named_plain", "not_bot_valence", "bots_ok", "no_dating_interrogative"]
 
 FIGURES = {
