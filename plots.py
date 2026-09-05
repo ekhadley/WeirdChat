@@ -225,7 +225,7 @@ def plot_picked_variants(variants: dict[str, dict], picked: list[str], paraphras
     for i, name in enumerate(picked, 2):
         draw_pair(ax, i, load_records(f"{model}/{prefix}{name}"), variants[prefix + name])
     ax.axvline(1.5, color=INK, linewidth=0.6, linestyle="--")
-    finish(fig, ax, ["baseline", "paraphrase mean"] + [LABELS.get(n, n) for n in picked], f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs), mean over {len(paraphrases)} meaning-preserving paraphrases, and prompt ablations, 95% Wilson CIs")
+    finish(fig, ax, ["baseline", "paraphrase mean"] + [LABELS.get(n, n) for n in picked], f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs mean over {len(paraphrases)} meaning-preserving paraphrases, and prompt ablations (provider={first['provider']}), 95% Wilson CIs")
     fig.savefig(f"figures/{out}.png", dpi=160)
     print(f"saved figures/{out}.png ({len(picked)} variants)")
 
@@ -400,7 +400,8 @@ def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, 
     columns += [html_column(LABELS.get(name[len(prefix):], name[len(prefix):]), bar_cells(load_records(f"{model}/{name}"), variants[name]), diff_html(base_text, variants[name]["prompt"]), sep=i == 0) for i, name in enumerate(names)]
     if mean:
         columns.append(html_column("mean", mean_cells(variants), escape(f"mean over the {len(variants)} variant prompts"), sep=True))
-    title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs prompt variants (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a variant label for its prompt, diffed against the base prompt (red struck-through = dropped, green = added); click to pin it."
+    what = f"mean over {len(paraphrases)} meaning-preserving paraphrases, and prompt ablations" if picked else f"prompt variants"
+    title = f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs) vs {what} (provider={first['provider']}), 95% Wilson CIs; mean bars: 95% CI over the per-prompt rates. Hover a variant label for its prompt, diffed against the base prompt (red struck-through = dropped, green = added); click to pin it."
     write_page(out, title, html_chart(columns))
 
 
@@ -429,19 +430,20 @@ def rate_cells(conds: dict[bool, tuple[float | None, int, int, int]]) -> list[di
 
 
 def plot_rates_html(names: list[str], out: str) -> None:
-    """HTML twin of plot_rates: one chart per run, stacked, one hue per behavior held fixed across every run."""
+    """HTML twin of plot_rates: one chart per run, stacked, one hue per behavior held fixed across every run. Like the PNG, "all"-behavior runs come after the rest, and a single run's name heads the page with the generic title under it."""
     behaviors = sorted({b for name in RUNS if os.path.exists(os.path.join(run_dir(name), "targets.json")) for b in rates(name)})
     color = dict(zip(behaviors, COLORS))
+    generic = "Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs). Bars are hued per behavior; incomplete bars are hatched and captioned sampled/quota."
     charts = []
-    for name in names:
-        head = f"{name}  ({RUNS[name]['model']})"
+    for name in sorted(names, key=lambda n: RUNS[n]["behaviors"] == "all"):
+        head = f"{name}  ({RUNS[name]['model']})" if len(names) > 1 else generic
         if not os.path.exists(os.path.join(run_dir(name), "targets.json")):
             charts.append(f'<h2>{escape(head)}</h2><div class="chart">no records yet</div>')
             continue
         cfg = json.load(open(os.path.join(run_dir(name), "config.json")))
         columns = [html_column(b, rate_cells(conds), None, color=color[b]) for b, conds in rates(name).items()]
         charts.append(html_chart(columns, f"{head}\nquota per prompt: off={cfg['n_off']} on={cfg['n_on']}, {cfg['n_prompts']} prompts per behavior"))
-    write_page(out, "Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs). Bars are hued per behavior; incomplete bars are hatched and captioned sampled/quota.", "".join(charts), hue=INK)
+    write_page(out, generic if len(names) > 1 else f"{names[0]}  ({RUNS[names[0]]['model']})", "".join(charts), hue=INK)
 
 
 ELO_RUNS = ["dv4f_full_elo", "inkling_full_elo", "q36_27b_elo"]
