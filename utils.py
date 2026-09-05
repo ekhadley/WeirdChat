@@ -423,7 +423,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     p, d = k / n, 1 + z**2 / n
     c = (p + z**2 / (2 * n)) / d
     h = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / d
-    return (c - h, c + h)
+    return (min(max(c - h, 0.0), p), max(min(c + h, 1.0), p))  # clamped: at k=0 or k=n rounding can put a bound a float epsilon outside [0, 1] or on the wrong side of p
 
 
 async def _complete(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prompt: str) -> dict:

@@ -1,0 +1,182 @@
+[
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0014",
+    "prompt_id": "644eb648a739d1201ddef5be131bb365dcc95f7b6c0440fb9e717a25165be1f554"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0054",
+    "prompt_id": "64bf8cf355c418ec67571b1050e48582fd3514b1ddc42b0b0c1e92f9f337e6de1c"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0067",
+    "prompt_id": "64c98e33ce96b62524706685a43f6dd64156b5ec530bb340f61705b10951ea1fab"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0012",
+    "prompt_id": "641fbe9e043dede2a83de2f7cd6cc42ed5b77b2b5a379a5c3b6e8a1b686ccb55cd"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0037",
+    "prompt_id": "64e6c5df4ee0424621956206c56f08b8fbaeb6c1fea8051b0f9ed9df651da223ef"
+  },
+  {
+    "behavior_id": "false-physical-embodiment",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/false-physical-embodiment/bloom_rewrite_v4_13_1/pg0011",
+    "prompt_id": "649999e71265df87a98ddfedb8a4d69f34c1ead22c608b02b4780b97161c6ac51c"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "649572bf43a6342022f59e6d9f558b80545be72d6e07c06e513c3f14e6588cbe8b"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "643d58e5951510446376132d3ab7830ed297468e29efa61091f534246382c9991d"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "64ccf7cce8ec3badfc4ae04d94eab7e32779982e87b0c6a34c31660839643d3cf9"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "644e255a2a43ccbb21f4c1e9861a5a66e9a69803b988cbeedcad12a5f5f540df26"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0002",
+    "prompt_id": "64a31b09fcecf6a0a17ab0a5c5d1864aa2d8577125bc7e7daa3bb1202b57514ba7"
+  },
+  {
+    "behavior_id": "cutting-instructions",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/cutting-instructions/eval_v4_10_7/pg0001",
+    "prompt_id": "64cf1a1f1000035f3c294b5d85082b787dec984e6c3a7c83c09842fec806c3a74b"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0001",
+    "prompt_id": "6442201e4dcf01e3125f18fc066c2ca84b23ed81eef9d00ad7c57cdb79c33d0591"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0031",
+    "prompt_id": "64d7baa6cb36138aa4e2b888fa09c0808be6ef4995aef7bb6f3a12c65f5c657991"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/eval_v4_13_10_qwen_27b/pg0001",
+    "prompt_id": "64b5fc749908f76cbe58c1a7e3dfe3d9ccb250912b373b6d1732c06430963c5ce1"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0020",
+    "prompt_id": "64603a20e35c9ca027453403d1f15ef1b099c8585f3ef4815a6fd67a6880d83121"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007",
+    "prompt_id": "64861ba7b8111fb33f0f277099b128abe4ba2eb18b10d241207d8c99a1c31c7acf"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/eval_v4_13_10_qwen_27b/pg0002",
+    "prompt_id": "64cf150620649c13d35e36e9d8f18136e2573f5fbbacb22eb099fcee993aee0beb"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/bloom_rewrite_v4_13_1/pg0022",
+    "prompt_id": "646acf2bfa3819978574426ecc5c4852d28d76e8a0e2104a4a39a3c62a65fa4e0c"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/bloom_rewrite_v4_13_1/pg0020",
+    "prompt_id": "645451d665234093f5b48d02fb24c20bb03dbdcb24001fb08da962c1afacccd77f"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/bloom_rewrite_v4_13_1/pg0088",
+    "prompt_id": "64e5058319c527428a287dcd69790d73d6d4d5cfc3c0a7bc362e79ce03c0575253"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/bloom_rewrite_v4_13_1/pg0045",
+    "prompt_id": "64c580c25b56b05f6aa6d306ceec9542287bfe914de6a554cd458927d49bdb2cbf"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/eval_v4_13_10_qwen_27b/pg0075",
+    "prompt_id": "64519597f45ac8b3dc6fae71a17307a6e0d22377f314f74cb0179d09ae994b818a"
+  },
+  {
+    "behavior_id": "fabricated-code-execution",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/fabricated-code-execution/eval_v4_13_10_qwen_27b/pg0011",
+    "prompt_id": "64b2b7cccacc21570218fc00ec892766e274729161a1c94247dd93b6e0e6794828"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0022",
+    "prompt_id": "64421791ff74d0faff77ff52212d89da7646b2152a27cf58d66b07ccb940d40fa5"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0019",
+    "prompt_id": "645b60e9516675958ed9f9eedeb7e6004fadcd5c2184b64a06e4e63cf527580822"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0037",
+    "prompt_id": "64a1d0ca42e46a7bf641d601c6291b9c98268040226571d19c3838b439f7b8a701"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0006",
+    "prompt_id": "64972c0d1a2cc3c5df3db038b55fb2b88e3a7a220e5bd0d5bd067a96e134b22786"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0023",
+    "prompt_id": "644f51db3132727b7089c1f6598bb3608aca347a6b1f9399b69c1033da9747fa6b"
+  },
+  {
+    "behavior_id": "chemtrails-assertion",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/chemtrails-assertion/eval_v4_13_10_qwen_27b/pg0021",
+    "prompt_id": "646de8e21ef5ab35be0a3da29cebba14f2780643e57e25a8bb1d545ef881d4a3a2"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/eval_v4_13_10_qwen_27b/pg0033",
+    "prompt_id": "6455e5d02108a750d9618fd6a884cf35064a060bf3dcd39fd6a5804cdf4af85831"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0012",
+    "prompt_id": "64f6bf7bb76f75089b8a4c33929b16707828f1755b4fc4fa8ce0aac9ba93db343b"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/eval_v4_13_10_qwen_27b/pg0041",
+    "prompt_id": "6425a5875c215106f86e16880e191c47771d9699771d0e05fa9c0fb29b9bb84c6d"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/eval_v4_13_10_qwen_27b/pg0036",
+    "prompt_id": "6487aa7c159bc6e01ef66404d61df496da4318c09f3e9dafeb0c73a61c0d64d1c8"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/bloom_rewrite_v4_13_1/pg0008",
+    "prompt_id": "64d262baa3ab52b50a1937d4adc5878f958e109e91a5075bf89abdf30ccacbc55a"
+  },
+  {
+    "behavior_id": "claims-called-911",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/claims-called-911/eval_v4_13_10_qwen_27b/pg0002",
+    "prompt_id": "6453d5de73ecd52c2835b32629454e80e0547627bae316a84d900df2e68ebd39cd"
+  }
+]

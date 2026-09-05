@@ -20,7 +20,7 @@ from variants import dating_custom_variants, dating_equivalent_variants, inkling
 # fixed categorical order, one hue per behavior across every panel. First 8 are the validated palette; the rest cover the 18-behavior "all" runs
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948", "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173", "#5254a3", "#8ca252", "#bd9e39", "#ad494a", "#a55194"]
 GRID = "#33343a"
-LABELS = {"no_dating_interrogative": "no_dating + interrogative", "named_plain_interrogative": "named_plain + interrogative"}  # variant name suffix -> bar label, when the suffix itself won't do
+LABELS = {"no_dating_interrogative": "no_dating + interrogative", "named_plain_interrogative": "named_plain + interrogative", "direct_human_or": "direct_address + human_or"}  # variant name suffix -> bar label, when the suffix itself won't do
 
 
 def tint(hex_color: str, amount: float = 0.5) -> tuple[float, float, float]:
@@ -38,7 +38,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     p = k / n
     center = (p + z**2 / (2 * n)) / (1 + z**2 / n)
     half = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / (1 + z**2 / n)
-    return center - half, center + half
+    return min(max(center - half, 0.0), p), max(min(center + half, 1.0), p)  # clamped: at k=0 or k=n rounding can put a bound a float epsilon outside [0, 1] or on the wrong side of p
 
 
 def rates(name: str) -> dict[str, dict[bool, tuple[float | None, int, int, int]]]:
@@ -55,9 +55,10 @@ def rates(name: str) -> dict[str, dict[bool, tuple[float | None, int, int, int]]
     return out
 
 
-def draw_panel(ax, name: str, color: dict[str, str]) -> None:
+def draw_panel(ax, name: str, color: dict[str, str], sep: str = "\n", head: bool = True) -> None:
+    """one run's bar pairs; `head=False` leaves the run name and model out of the panel title (the figure title already says it)"""
     if not os.path.exists(os.path.join(run_dir(name), "targets.json")):
-        ax.set_title(f"{name}  ({RUNS[name]['model']})", fontsize=9, loc="left")
+        ax.set_title(f"{name}  ({RUNS[name]['model']})", fontsize=13.5, loc="left")
         ax.text(0.5, 0.5, "no records yet", ha="center", va="center", transform=ax.transAxes, color=INK)
         ax.set_xticks([])
         return
@@ -66,39 +67,47 @@ def draw_panel(ax, name: str, color: dict[str, str]) -> None:
         for on, x in ((False, i - 0.2), (True, i + 0.2)):
             rate, k, n, quota = conds[on]
             if rate is None:
-                ax.text(x, 0.01, "no\ndata", ha="center", va="bottom", fontsize=6, color=INK, rotation=90)
+                ax.text(x, 0.01, "no\ndata", ha="center", va="bottom", fontsize=9, color=INK, rotation=90)
                 continue
             partial = n < quota
             lo, hi = wilson(k, n)
             ax.bar(x, rate, 0.38, color=color[b] if on else tint(color[b]), hatch="////" if partial else None, edgecolor=BG if partial else None, linewidth=0)
             ax.errorbar(x, rate, yerr=[[rate - lo], [hi - rate]], color=INK, linewidth=0.8, capsize=2)
-            ax.text(x, hi + 0.01, f"{rate:.3f}" + (f"\n{n}/{quota}" if partial else ""), ha="center", va="bottom", fontsize=6.5, color=INK)
-    ax.set_xticks(range(len(r)), [b.replace("-", "\n") for b in r], fontsize=7)
+            ax.text(x, hi + 0.01, f"{rate:.3f}" + (f"\n{n}/{quota}" if partial else ""), ha="center", va="bottom", fontsize=10, color=INK)
+    ax.set_xticks(range(len(r)), [b.replace("-", "\n") for b in r], fontsize=10.5)
     cfg = json.load(open(os.path.join(run_dir(name), "config.json")))
-    ax.set_title(f"{name}  ({RUNS[name]['model']})\nquota per prompt: off={cfg['n_off']} on={cfg['n_on']}, {cfg['n_prompts']} prompts per behavior", fontsize=9, loc="left")
+    ax.set_title((f"{name}  ({RUNS[name]['model']}){sep}" if head else "") + f"quota per prompt: off={cfg['n_off']} on={cfg['n_on']}, {cfg['n_prompts']} prompts per behavior", fontsize=13.5, loc="left")
 
 
-def plot_rates(names: list[str], out: str) -> None:
+def plot_rates(names: list[str], out: str, ncols: int = 3) -> None:
     behaviors = sorted({b for name in RUNS if os.path.exists(os.path.join(run_dir(name), "targets.json")) for b in rates(name)})  # union over every run so a behavior keeps its color across figures
     assert len(behaviors) <= len(COLORS), f"{len(behaviors)} behaviors but only {len(COLORS)} colors"
     color = dict(zip(behaviors, COLORS))
-    wide = [name for name in names if RUNS[name]["behaviors"] == "all"]  # full-width row
+    wide = [name for name in names if RUNS[name]["behaviors"] == "all"] if ncols > 1 else []  # full-width row; at ncols=1 every panel is already full width, so keep the given order
     narrow = [name for name in names if name not in wide]
-    nrows = -(-len(narrow) // 3) + len(wide)
-    fig = plt.figure(figsize=(18, 4.2 * nrows))
-    axes = [fig.add_subplot(nrows, 3, i + 1) for i in range(len(narrow))] + [fig.add_subplot(nrows, 1, -(-len(narrow) // 3) + 1 + i) for i in range(len(wide))]
+    nrows = -(-len(narrow) // ncols) + len(wide)
+    fig = plt.figure(figsize=(18, 4.2 * nrows + 0.6 * (len(names) == 1)))  # a single-run figure gets room for its subtitle
+    axes = [fig.add_subplot(nrows, ncols, i + 1) for i in range(len(narrow))] + [fig.add_subplot(nrows, 1, -(-len(narrow) // ncols) + 1 + i) for i in range(len(wide))]
     for ax, name in zip(axes, narrow + wide):
-        draw_panel(ax, name, color)
+        draw_panel(ax, name, color, sep="  " if ncols == 1 or name in wide else "\n", head=len(names) > 1)  # full-width panels fit the run and quota on one title line
         ax.set_ylim(0, 1.08)
-        ax.set_ylabel("elicitation rate", fontsize=8)
+        ax.set_ylabel("elicitation rate", fontsize=12)
+        ax.tick_params(axis="y", labelsize=15)
         ax.grid(axis="y", color=GRID, linewidth=0.6)
         ax.set_axisbelow(True)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
-    handles = [Patch(color=tint(INK), label="reasoning off"), Patch(color=INK, label="reasoning on"), Patch(facecolor=tint(INK), hatch="////", edgecolor=BG, linewidth=0, label="incomplete (sampled/quota shown)")]
-    fig.legend(handles=handles, loc="upper right", ncols=3, fontsize=9, frameon=False)
-    fig.suptitle("Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs)", fontsize=12, x=0.02, ha="left")
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    handles = [Patch(color=tint(INK), label="reasoning off"), Patch(color=INK, label="reasoning on")]
+    generic = "Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs)"
+    if len(names) == 1:  # one run: its name and model head the figure, the generic title becomes the subtitle
+        fig.suptitle(f"{names[0]}  ({RUNS[names[0]]['model']})", fontsize=18, x=0.02, y=0.99, ha="left")
+        fig.text(0.02, 0.905, generic, fontsize=13.5, ha="left", color=INK)
+        fig.legend(handles=handles, loc="upper right", bbox_to_anchor=(1, 0.94), ncols=2, fontsize=13.5, frameon=False)
+        fig.tight_layout(rect=(0, 0, 1, 0.88))
+    else:
+        fig.suptitle(generic, fontsize=18, x=0.02, y=0.995, ha="left")
+        fig.legend(handles=handles, loc="upper right", bbox_to_anchor=(1, 0.978), ncols=2, fontsize=13.5, frameon=False)
+        fig.tight_layout(rect=(0, 0, 1, 0.96))
     fig.savefig(f"figures/{out}.png", dpi=160)
     print(f"saved figures/{out}.png ({len(names)} runs)")
 
@@ -152,8 +161,8 @@ def finish(fig, ax, labels: list[str], title: str) -> None:
     ax.set_axisbelow(True)
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
-    handles = [Patch(color=tint(COLORS[0]), label="reasoning off"), Patch(color=COLORS[0], label="reasoning on"), Patch(facecolor=tint(COLORS[0]), hatch="////", edgecolor=BG, linewidth=0, label="incomplete")]
-    ax.legend(handles=handles, loc="upper right", ncols=3, fontsize=8, frameon=False)
+    handles = [Patch(color=tint(COLORS[0]), label="reasoning off"), Patch(color=COLORS[0], label="reasoning on")]
+    ax.legend(handles=handles, loc="upper right", ncols=2, fontsize=8, frameon=False)
     ax.set_title(title, fontsize=9, loc="left")
     fig.tight_layout()
 
@@ -202,6 +211,25 @@ def plot_variants(variants: dict[str, dict], out: str, mean: bool, paraphrases: 
     print(f"saved figures/{out}.png ({len(names)} variants)")
 
 
+def plot_picked_variants(variants: dict[str, dict], picked: list[str], paraphrases: dict[str, dict], out: str) -> None:
+    """plot_variants restricted to the variant name suffixes in `picked`, in that order, after the baseline and paraphrase mean."""
+    first = next(iter(variants.values()))
+    model = first["model"].split("/")[1]
+    prefix = os.path.commonprefix(list(variants)).rsplit("_", 1)[0] + "_"
+    base_run, base_idx = first["base"].rsplit("/", 1)
+    prompt_id = load_records(base_run)[int(base_idx)]["prompt_id"]
+    baseline = [r for d in os.listdir(f"results/{model}") if not d.startswith("v_") and os.path.exists(f"results/{model}/{d}/records.jsonl") for r in load_records(f"{model}/{d}") if r.get("prompt_id") == prompt_id]
+    fig, ax = plt.subplots(figsize=(1.1 * (2 + len(picked)) + 3, 5))
+    draw_pair(ax, 0, baseline, None)
+    draw_mean(ax, 1, paraphrases)
+    for i, name in enumerate(picked, 2):
+        draw_pair(ax, i, load_records(f"{model}/{prefix}{name}"), variants[prefix + name])
+    ax.axvline(1.5, color=INK, linewidth=0.6, linestyle="--")
+    finish(fig, ax, ["baseline", "paraphrase mean"] + [LABELS.get(n, n) for n in picked], f"{resolve(first)[0]} on {model}: base prompt (pooled over unpinned runs), mean over {len(paraphrases)} meaning-preserving paraphrases, and prompt ablations, 95% Wilson CIs")
+    fig.savefig(f"figures/{out}.png", dpi=160)
+    print(f"saved figures/{out}.png ({len(picked)} variants)")
+
+
 PAGE = """<!doctype html>
 <meta charset="utf-8"><title>{out}</title>
 <style>
@@ -240,7 +268,7 @@ h2 {{ font-size: 12px; font-weight: 400; margin: 22px 0 0 40px; white-space: pre
 #tip ins {{ color: {green}; text-decoration: none; }}
 </style>
 <h1>{title}</h1>
-<div class="legend"><span><i class="key" style="background:{off}"></i>reasoning off</span><span><i class="key" style="background:{on}"></i>reasoning on</span><span><i class="key" style="background:{off};background-image:repeating-linear-gradient(45deg,transparent 0 3px,{bg} 3px 5px)"></i>incomplete</span></div>
+<div class="legend"><span><i class="key" style="background:{off}"></i>reasoning off</span><span><i class="key" style="background:{on}"></i>reasoning on</span></div>
 {charts}
 <div id="tip"></div>
 <script>
@@ -349,9 +377,9 @@ def write_page(out: str, title: str, charts: str, hue: str = COLORS[0]) -> None:
     print(f"saved figures/{out}.html")
 
 
-def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, paraphrases: dict[str, dict] | None = None) -> None:
-    """HTML twin of plot_variants: the same bars and columns, and hovering a bar's label shows that prompt as a word diff against the base prompt."""
-    names = by_rate(variants)
+def plot_variants_html(variants: dict[str, dict], out: str, mean: bool = False, paraphrases: dict[str, dict] | None = None, picked: list[str] | None = None) -> None:
+    """HTML twin of plot_variants: the same bars and columns, and hovering a bar's label shows that prompt as a word diff against the base prompt. `picked` restricts to those variant name suffixes, in that order (the twin of plot_picked_variants)."""
+    names = [next(n for n in variants if n.endswith("_" + p)) for p in picked] if picked else by_rate(variants)
     first = variants[names[0]]
     prefix = os.path.commonprefix(names).rsplit("_", 1)[0] + "_"
     model = first["model"].split("/")[1]
@@ -409,22 +437,29 @@ def plot_rates_html(names: list[str], out: str) -> None:
     write_page(out, "Per-behavior elicitation rate, reasoning off vs on (95% Wilson CIs). Bars are hued per behavior; incomplete bars are hatched and captioned sampled/quota.", "".join(charts), hue=INK)
 
 
-ELO_RUNS = [name for name, cfg in RUNS.items() if cfg.get("rank_by", "elo") == "elo"]
-SMOKE_RUNS = ["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo", "q36_35b_smoke", "gemma_elo", "inkling_smoke"]
-MAIN_RUNS = ["dv4f_full_elo", "inkling_full_elo", "q36_27b_z", "gemma_elo"]
+ELO_RUNS = ["dv4f_full_elo", "inkling_full_elo", "q36_27b_elo"]
+SMOKE_RUNS = ["dv4f_smoke", "q36_27b_smoke", "q36_27b_elo6", "q36_35b_smoke", "gemma_elo", "inkling_smoke"]
+ALL_RUNS = ["dv4f_full_elo", "inkling_full_elo", "q36_27b_z", "gemma_elo", "nemotron_elo"]
 Q27B_911_PROMPTS = {"648552fd": "ladder fall", "640da66c": "shot", "6431e95c": "dog attack", "6455e5d0": "overdose"}
 INKLING_DENYING_PROMPTS = {"64aae94e": "grief", "64753fcc": "refund", "6454e031": "lonely"}
 DENYING_PROMPTS = {"64ec0ce1": "dating app", "64b563fb": "grief", "64b527e1": "work crisis", "64d0d877": "moral dilemma", "6484264e": "poem", "648d52b6": "lonely"}
 DV4F_DATING_ABLATIONS = {k: v for k, v in dating_custom_variants.items() if k != "v_dv4f_dating_pretending_one"}
 
+INKLING_SUPPORT_PICKED = ["named_plain", "bots_ok", "direct_address", "human_question", "ai_not_bot", "no_demand", "no_transfer", "direct_human_or"]
+DV4F_DATING_PICKED = ["no_dating", "interrogative", "imperative", "named_plain", "not_bot_valence", "bots_ok", "no_dating_interrogative"]
+
 FIGURES = {
     "smoke_combined": lambda: plot_rates(SMOKE_RUNS, "smoke_combined"),
     "smoke_combined_html": lambda: plot_rates_html(SMOKE_RUNS, "smoke_combined"),
-    "plots_elo": lambda: plot_rates(ELO_RUNS, "plots_elo"),
+    "plots_elo": lambda: plot_rates(ELO_RUNS, "plots_elo", ncols=1),
     "plots_elo_html": lambda: plot_rates_html(ELO_RUNS, "plots_elo"),
     "dv4f_dating_equivalents": lambda: plot_variants(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
     "dv4f_dating_equivalents_html": lambda: plot_variants_html(dating_equivalent_variants, "dv4f_dating_equivalents", mean=True),
     "dv4f_dating_ablations": lambda: plot_variants(DV4F_DATING_ABLATIONS, "dv4f_dating_ablations", mean=False, paraphrases=dating_equivalent_variants),
+    "inkling_support_ablations_picked": lambda: plot_picked_variants(support_custom_variants, INKLING_SUPPORT_PICKED, inkling_support_equivalent_variants, "inkling_support_ablations_picked"),
+    "inkling_support_ablations_picked_html": lambda: plot_variants_html(support_custom_variants, "inkling_support_ablations_picked", paraphrases=inkling_support_equivalent_variants, picked=INKLING_SUPPORT_PICKED),
+    "dv4f_dating_ablations_picked_html": lambda: plot_variants_html(dating_custom_variants, "dv4f_dating_ablations_picked", paraphrases=dating_equivalent_variants, picked=DV4F_DATING_PICKED),
+    "dv4f_dating_ablations_picked": lambda: plot_picked_variants(dating_custom_variants, DV4F_DATING_PICKED, dating_equivalent_variants, "dv4f_dating_ablations_picked"),
     "dv4f_dating_ablations_html": lambda: plot_variants_html(DV4F_DATING_ABLATIONS, "dv4f_dating_ablations", paraphrases=dating_equivalent_variants),
     "inkling_support_equivalents": lambda: plot_variants(inkling_support_equivalent_variants, "inkling_support_equivalents", mean=True),
     "inkling_support_equivalents_html": lambda: plot_variants_html(inkling_support_equivalent_variants, "inkling_support_equivalents", mean=True),
@@ -440,8 +475,10 @@ FIGURES = {
     "q27b_911_prompts_html": lambda: plot_prompts_html("qwen3.6-27b/q36_27b_z", "claims-called-911", Q27B_911_PROMPTS, "q27b_911_prompts"),
     "inkling_denying_prompts": lambda: plot_prompts("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),
     "inkling_denying_prompts_html": lambda: plot_prompts_html("inkling/inkling_full_elo", "denying-ai-identity", INKLING_DENYING_PROMPTS, "inkling_denying_prompts"),
-    "main": lambda: plot_rates(MAIN_RUNS, "main"),
-    "main_html": lambda: plot_rates_html(MAIN_RUNS, "main"),
+    "all": lambda: plot_rates(ALL_RUNS, "all"),
+    "all_html": lambda: plot_rates_html(ALL_RUNS, "all"),
+    **{f"all_{name}": (lambda name=name: plot_rates([name], f"all_{name}", ncols=1)) for name in ALL_RUNS},
+    **{f"all_{name}_html": (lambda name=name: plot_rates_html([name], f"all_{name}")) for name in ALL_RUNS},
 }
 
 if __name__ == "__main__":

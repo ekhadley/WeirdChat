@@ -4,7 +4,5 @@
   "behaviors": "all",
   "n_prompts": 6,
   "n_off": 240,
-  "n_on": 240,
-  "price_in": 0.082,
-  "price_out": 0.165
+  "n_on": 240
 }
