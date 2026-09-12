@@ -12,8 +12,9 @@ lists every run under results/, with its own filter box.
 
 CoT resampling output (results/<model>/resample/<run>_<idx>/, from utils.resample via deepseek_resample.py / resample_qwen.py) appears as one sidebar entry per model,
 "<model>/resample". Its right pane shows the o_t = P(match | prefix_t) curve with Wilson bands, the base reasoning
-token by token with background intensity = o_t (a token is colored by the nearest resampled position at or before it;
-positions not resampled are dimmed), and, on clicking a token or curve point (h/l to step), that position's rollouts
+token by token with background intensity = o_t (a token is colored by the nearest resampled position at or after it, the first
+prefix that includes it; positions not resampled are dimmed; a button switches the coloring to green/red by the change in o_t from
+the previous resampled position, scaled by the record's largest change), and, on clicking a token or curve point (h/l to step), that position's rollouts
 with judge verdicts, continued reasoning, and responses.
 
 Usage: uv run python view.py
@@ -160,18 +161,24 @@ def curve_svg(scores: list[dict], i: int) -> str:
     return f'<div class="curve">{ax}<svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" preserveAspectRatio="none">{grid}<polygon class="band" points="{band}"/><polyline class="line" points="{line}"/>{pts}</svg></div>'
 
 
-def tok_span(i: int, s: dict, text: str, observed: bool) -> str:
-    p = s["p_match"] if s["p_match"] == s["p_match"] else 0.0  # nan when nothing judged at this position
-    title = f't={s["t"]} p={p:.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]}'
-    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" style="background:rgba(250,189,47,{0.45 * p:.2f})" data-tip="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
+def tok_span(i: int, s: dict, delta: float, dmax: float, text: str, observed: bool) -> str:
+    title = f't={s["t"]} p={pm(s):.2f} [{s["ci"][0]:.2f},{s["ci"][1]:.2f}] n={s["n"]} delta={delta:+.2f}'
+    dbg = f'rgba({"142,192,124" if delta > 0 else "251,73,52"},{0.7 * abs(delta) / dmax if dmax else 0:.2f})'
+    return f'<span class="tok{"" if observed else " unobs"}" data-t="{s["t"]}" data-abs="rgba(250,189,47,{0.45 * pm(s):.2f})" data-delta="{dbg}" data-tip="{esc(title)}" onclick="selPos({i},{s["t"]})">{text}</span>'
+
+
+def pm(s: dict) -> float:
+    return s["p_match"] if s["p_match"] == s["p_match"] else 0.0  # nan when nothing judged at this position
 
 
 def token_strip(sc: dict, i: int) -> str:
-    by_t = {s["t"]: s for s in sc["scores"]}  # each token is colored by the nearest observed position at or before it
-    spans, cur = [tok_span(i, by_t[0], "&lt;think&gt;", True)], 0
-    for k, tok in enumerate(sc["tokens"], start=1):
-        cur = k if k in by_t else cur
-        spans.append(tok_span(i, by_t[cur], esc(tok), k in by_t))
+    scores = sc["scores"]  # each token is colored by the nearest resampled position at or after it: the first prefix that includes it
+    deltas = {s["t"]: pm(s) - pm(prev) for prev, s in zip(scores, scores[1:])} | {0: 0.0}
+    dmax = max(abs(d) for d in deltas.values())
+    spans, k = [tok_span(i, scores[0], 0.0, dmax, "&lt;think&gt;", True)], 0
+    for s in scores[1:]:
+        for k in range(k + 1, s["t"] + 1):
+            spans.append(tok_span(i, s, deltas[s["t"]], dmax, esc(sc["tokens"][k - 1]), k == s["t"]))
     return f'<div class="toks">{"".join(spans)}</div>'
 
 
@@ -180,7 +187,7 @@ def resample_panel(model: str, i: int, sc: dict) -> str:
     tag = f'<span class="tag" title="click to copy (paste into the lens viewer)" onclick="navigator.clipboard.writeText(this.textContent)">{esc(sc["run"])}/{sc["idx"]}</span>'
     meta = f'behavior={sc["behavior_id"]} | resampled via {sc["provider"]} S={sc["S"]} | {len(sc["scores"])} positions over {len(sc["tokens"])} reasoning tokens | base rollout via {base.get("provider")}'
     return (f'<div class="panel" data-idx="{i}"><div class="meta">{tag} | {esc(meta)}</div>'
-            f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step<button class="fitbtn" onclick="toggleFit()"></button></div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
+            f'<div class="label label-think">P(match | prefix<sub>t</sub>) &mdash; click a point or token for its rollouts, h/l to step<button class="fitbtn" onclick="toggleDelta()"></button><button class="fitbtn" onclick="toggleFit()"></button></div>{curve_svg(sc["scores"], i)}{token_strip(sc, i)}'
             f'<div class="pos" id="pos-{i}"><div class="placeholder">select a position</div></div>'
             f'<div class="label label-user">prompt</div><div class="mdbox">{md(prompt_text(base))}</div>'
             f'<div class="label label-asst">base response ({"MATCH" if base["judge_match"] else "NO MATCH"})</div><div class="mdbox">{md(base["response"])}</div></div>')
@@ -336,7 +343,7 @@ mark.hl { background: #264f78; color: #ebdbb2; border-radius: 2px; padding: 0 1p
 .curve .pt { fill: transparent; cursor: pointer; } .curve .pt:hover, .curve .pt.sel { fill: #ebdbb2; r: 5; }
 .right.fit .curve svg { width: 100%; }
 #tip { display: none; position: fixed; pointer-events: none; background: #1d2021; color: #ebdbb2; border: 1px solid #504945; border-radius: 3px; padding: 3px 6px; font-family: monospace; font-size: 11px; white-space: pre; z-index: 10; }
-.fitbtn { float: right; font: inherit; color: #928374; background: none; border: 1px solid #504945; border-radius: 3px; cursor: pointer; }
+.fitbtn { float: right; margin-left: 6px; font: inherit; color: #928374; background: none; border: 1px solid #504945; border-radius: 3px; cursor: pointer; }
 .toks { background: #32302f; border-radius: 4px; padding: 10px 12px; margin-top: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.9; }
 .tok { cursor: pointer; padding: 2px 0; } .tok:hover { outline: 1px solid #ebdbb2; } .tok.sel { outline: 2px solid #ebdbb2; }
 .tok.unobs { color: #928374; }
@@ -498,12 +505,15 @@ apply();
 
 # Resampling page: row selection loads the record panel; a token or curve point loads that position's rollouts; h/l step positions.
 RJS = """
-let sel = null, curPos = null, fit = false;
+let sel = null, curPos = null, fit = false, delta = false;
 function syncFit() {
     document.querySelector('.right').classList.toggle('fit', fit);
-    document.querySelectorAll('.fitbtn').forEach(b => b.textContent = fit ? 'uncompress' : 'fit to frame');
+    document.querySelectorAll('.fitbtn[onclick="toggleFit()"]').forEach(b => b.textContent = fit ? 'uncompress' : 'fit to frame');
+    document.querySelectorAll('.fitbtn[onclick="toggleDelta()"]').forEach(b => b.textContent = delta ? 'color: delta' : 'color: rate');
+    document.querySelectorAll('.tok').forEach(e => e.style.background = delta ? e.dataset.delta : e.dataset.abs);
 }
 function toggleFit() { fit = !fit; syncFit(); }
+function toggleDelta() { delta = !delta; syncFit(); }
 const tip = document.getElementById('tip');  // instant hover stats, instead of the browser's delayed title tooltip
 document.addEventListener('mouseover', e => { const el = e.target.closest('[data-tip]'); tip.style.display = el ? 'block' : 'none'; if (el) tip.textContent = el.dataset.tip; });
 document.addEventListener('mousemove', e => { tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; });

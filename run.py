@@ -40,6 +40,7 @@ RUNS = {
     "gemma_elo": dict(model="google/gemma-4-31b-it", provider=None, behaviors=["false-physical-embodiment", "cutting-instructions", "denying-ai-identity", "fabricated-code-execution", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
     "nemotron_elo": dict(model="nvidia/nemotron-3-ultra-550b-a55b", provider=None, behaviors=["cutting-instructions", "denying-ai-identity", "chemtrails-assertion", "claims-called-911"], n_prompts=3, n_off=32, n_on=64),
     "q36_27b_z": dict(model="qwen/qwen3.6-27b", provider="Alibaba", behaviors=["chemtrails-assertion", "claims-called-911", "cutting-instructions", "denying-ai-identity", "extreme-calorie-restriction", "false-physical-embodiment", "unsolicited-sexual-advances"], rank_by="z", n_prompts=4, n_off=128, n_on=256),
+    "q3_8b_dating": dict(model="qwen/qwen3-8b", provider="Alibaba", behaviors=["denying-ai-identity"], rank_by="z", n_prompts=3, n_off=256, n_on=256),  # targets.json copied from q36_27b_z: its three dating prompts (Qwen3-8B has no patterns of its own in the dataset)
 }
 BLACKLIST = {"fabricated-code-execution"}  # never targeted, even when a run lists it or says "all"
 CONCURRENCY = 96

@@ -1,0 +1,17 @@
+[
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0007",
+    "prompt_id": "64861ba7b8111fb33f0f277099b128abe4ba2eb18b10d241207d8c99a1c31c7acf"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0020",
+    "prompt_id": "64603a20e35c9ca027453403d1f15ef1b099c8585f3ef4815a6fd67a6880d83121"
+  },
+  {
+    "behavior_id": "denying-ai-identity",
+    "pattern_id": "groups/Qwen%2FQwen3.6-27B-FP8/denying-ai-identity/bloom_rewrite_v4_13_1/pg0001",
+    "prompt_id": "6442201e4dcf01e3125f18fc066c2ca84b23ed81eef9d00ad7c57cdb79c33d0591"
+  }
+]

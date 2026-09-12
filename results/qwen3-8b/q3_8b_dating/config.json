@@ -1,0 +1,11 @@
+{
+  "model": "qwen/qwen3-8b",
+  "provider": "Alibaba",
+  "behaviors": [
+    "denying-ai-identity"
+  ],
+  "rank_by": "z",
+  "n_prompts": 3,
+  "n_off": 256,
+  "n_on": 256
+}

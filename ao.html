@@ -1,0 +1,188 @@
+<title>ao viewer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; background: #282828; color: #ebdbb2; font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.5; }
+body { display: flex; flex-direction: column; }
+.banner { display: flex; align-items: center; gap: 10px; background: #3c3836; border-bottom: 1px solid #504945; padding: 8px 16px; font-weight: bold; color: #fb4934; flex-shrink: 0; }
+#status { color: #a89984; font-weight: normal; font-size: 13px; }
+.panes { display: flex; flex: 1; min-height: 0; gap: 16px; padding: 12px 16px; }
+#strip { flex: 1; min-width: 0; font-family: monospace; font-size: 17px; line-height: 1.5; overflow-y: auto; }
+#right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #928374; }
+.where { color: #ebdbb2; font-family: monospace; font-size: 13px; }
+input, textarea, button { background: #1d2021; border: 1px solid #504945; color: #ebdbb2; border-radius: 3px; font-family: inherit; font-size: 13px; outline: none; }
+input:focus, textarea:focus { border-color: #83a598; }
+input { padding: 3px 8px; }
+input[type=number] { width: 60px; }
+#tag, #filter, textarea { width: 100%; }
+#tag, #text, #filter { font-family: monospace; }
+#text { height: 22vh; min-height: 90px; }
+#question { height: 60px; }
+textarea { padding: 8px; resize: vertical; }
+button { background: #282828; color: #a89984; padding: 3px 14px; border-radius: 4px; cursor: pointer; user-select: none; }
+button:hover { color: #ebdbb2; background: #504945; }
+.tok { display: inline-block; vertical-align: top; cursor: pointer; }
+.tok .txt { display: block; white-space: pre-wrap; padding: 2px 1px; }
+.tok.alt .txt { background: #3c3836; }
+.tok:not(.alt) .txt { background: #32302f; }
+.tok:hover .txt { background: #504945; }
+.tok.sel .txt { background: #fabd2f; color: #282828; }
+.bar { height: 4px; margin-top: 2px; background: #83a598; }
+#results { flex: 1; min-height: 0; overflow-y: auto; font-family: monospace; font-size: 13px; scrollbar-width: thin; scrollbar-color: #504945 transparent; }
+.q { color: #928374; padding: 4px 0; white-space: pre-wrap; }
+.ans { padding: 3px 8px; border-left: 2px solid #504945; margin: 3px 0; white-space: pre-wrap; }
+.row { display: flex; gap: 8px; padding: 2px 0; border-bottom: 1px solid #32302f; cursor: pointer; }
+.row:hover { background: #3c3836; }
+.row.hit { color: #b8bb26; }
+.row .pos { width: 40px; flex-shrink: 0; color: #928374; text-align: right; }
+.row .tk { width: 110px; flex-shrink: 0; color: #d3869b; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+.row .a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#strip, textarea { scrollbar-width: thin; scrollbar-color: #504945 transparent; }
+#tip { position: fixed; background: #1d2021; border: 1px solid #504945; border-radius: 4px; padding: 5px 10px; font-family: monospace; font-size: 12px; pointer-events: none; z-index: 10; white-space: pre-wrap; max-width: 600px; }
+</style>
+
+<div class="banner">ao viewer <span id="status"></span></div>
+<div class="panes">
+    <div id="strip"></div>
+    <div id="right">
+        <input id="tag" placeholder="model/run/idx from the rollout viewer, enter to load text (not run)" onkeydown="if (event.key == 'Enter') loadTag()">
+        <textarea id="text" placeholder="raw text (already templated); paste a record tag above to fill"></textarea>
+        <div class="controls">
+            <button onclick="run()">run</button>
+            <span class="label">layers</span> <input id="layers" style="width:140px">
+            <span class="label">n</span> <input id="n" type="number">
+            <span class="label">temp</span> <input id="temp" type="number" step="0.1" placeholder="cfg">
+            <span class="label">coef</span> <input id="coef" type="number" step="0.1">
+            <span class="label">max new</span> <input id="maxnew" type="number">
+        </div>
+        <textarea id="question" placeholder="question for the oracle"></textarea>
+        <div class="controls">
+            <button onclick="askSpan()">ask span</button>
+            <button onclick="sweep()">sweep span</button>
+            <span class="where" id="where">click a token, shift-click to extend the span</span>
+        </div>
+        <input id="filter" placeholder="highlight swept tokens whose answers contain this (case-insensitive)" oninput="render()">
+        <div id="results"></div>
+    </div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+let toks = null, lo = 0, hi = 0, sweepData = null;
+const $ = id => document.getElementById(id);
+const fields = { text: "", tag: "", question: "Describe what is represented in these activations.", layers: "21,22,23,24,25", n: "3", temp: "", coef: "1", maxnew: "100" };
+for (const [id, dflt] of Object.entries(fields)) {
+    $(id).value = localStorage.getItem(id) ?? dflt;
+    $(id).addEventListener("input", () => localStorage.setItem(id, $(id).value));
+}
+
+function esc(s) { return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;"); }
+function cfg() {
+    return { layers: $("layers").value.split(",").map(Number), n: +$("n").value, temperature: $("temp").value === "" ? null : +$("temp").value, coef: +$("coef").value, max_new_tokens: +$("maxnew").value };
+}
+async function post(url, body) {
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) {
+        $("status").textContent = `${url} failed: ${r.status}`;
+        throw new Error(await r.text());
+    }
+    return r.json();
+}
+
+async function loadTag() {
+    const tag = $("tag").value.trim();
+    localStorage.setItem("tag", tag);
+    $("status").textContent = "templating...";
+    const res = await (await fetch("/text/" + tag)).json();
+    $("text").value = res.text;
+    localStorage.setItem("text", res.text);
+    $("status").textContent = "loaded, edit then run";
+}
+
+async function run() {
+    $("status").textContent = "collecting activations...";
+    toks = (await post("/run", { text: $("text").value, cfg: cfg() })).toks;
+    $("status").textContent = `${toks.length} tokens`;
+    lo = 0; hi = toks.length - 1; sweepData = null;
+    renderStrip();
+    render();
+}
+
+function spanText() { return toks.slice(lo, hi + 1).join(""); }
+
+async function askSpan() {
+    $("status").textContent = `asking about [${lo}, ${hi}]...`;
+    const q = $("question").value;
+    const res = await post("/ask", { cfg: cfg(), start: lo, end: hi + 1, question: q });
+    $("status").textContent = `${res.answers.length} answers`;
+    $("results").innerHTML = `<div class="q">[${lo}, ${hi}] ${esc(JSON.stringify(spanText()))}\n${esc(q)}</div>` + res.answers.map(a => `<div class="ans">${esc(a)}</div>`).join("");
+}
+
+async function sweep() {
+    $("status").textContent = `sweeping [${lo}, ${hi}]...`;
+    const q = $("question").value;
+    const res = await post("/sweep", { cfg: cfg(), start: lo, end: hi + 1, question: q });
+    sweepData = { start: lo, answers: res.answers, question: q };
+    $("status").textContent = `swept ${res.answers.length} positions`;
+    render();
+}
+
+function sweepAt(i) { return sweepData && i >= sweepData.start && i < sweepData.start + sweepData.answers.length ? sweepData.answers[i - sweepData.start] : null; }
+function hitFrac(i) {
+    const f = $("filter").value.toLowerCase(), ans = sweepAt(i);
+    return f && ans ? ans.filter(a => a.toLowerCase().includes(f)).length / ans.length : 0;
+}
+
+function renderStrip() {
+    const strip = $("strip");
+    strip.innerHTML = "";
+    toks.forEach((tok, i) => {
+        const d = document.createElement("div");
+        d.className = "tok" + (i % 2 ? " alt" : "");
+        const txt = document.createElement("span");
+        txt.className = "txt";
+        txt.textContent = tok.replaceAll("\n", "⏎");
+        d.appendChild(txt);
+        d.onclick = e => { if (e.shiftKey) { if (i < lo) lo = i; else hi = i; } else lo = hi = i; render(); };
+        d.onmouseenter = () => showTip(i, d);
+        d.onmouseleave = () => $("tip").hidden = true;
+        strip.appendChild(d);
+        for (let j = 0; j < tok.split("\n").length - 1; j++) strip.appendChild(document.createElement("br"));
+    });
+}
+
+function showTip(i, d) {
+    const ans = sweepAt(i);
+    if (!ans) return;
+    const tip = $("tip");
+    tip.textContent = ans.join("\n---\n");
+    tip.hidden = false;
+    const r = d.getBoundingClientRect();
+    tip.style.left = r.left + "px";
+    tip.style.top = r.bottom + 4 + "px";
+}
+
+function render() {
+    if (!toks) return;
+    $("where").textContent = `[${lo}, ${hi}] ${JSON.stringify(spanText()).slice(0, 80)}`;
+    document.querySelectorAll("#strip .tok").forEach((d, i) => {
+        d.classList.toggle("sel", i >= lo && i <= hi);
+        d.querySelectorAll(".bar").forEach(b => b.remove());
+        const frac = hitFrac(i);
+        if (frac) {
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            bar.style.opacity = frac;
+            d.appendChild(bar);
+        }
+    });
+    if (!sweepData) return;
+    const rows = sweepData.answers.map((ans, j) => {
+        const i = sweepData.start + j;
+        return `<div class="row${hitFrac(i) ? " hit" : ""}" onclick="lo = hi = ${i}; render()"><span class="pos">${i}</span><span class="tk">${esc(JSON.stringify(toks[i]))}</span><span class="a">${esc(ans[0])}</span></div>`;
+    });
+    $("results").innerHTML = `<div class="q">${esc(sweepData.question)}  (first of ${sweepData.answers[0].length} answers per position; hover a token for all)</div>` + rows.join("");
+}
+</script>
