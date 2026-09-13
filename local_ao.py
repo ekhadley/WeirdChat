@@ -14,24 +14,32 @@ print(cfg)
 #%% pick a replay record and collect its activations
 
 RUN = "qwen3-8b/q3_8b_dating"
-reasoning_enabled = False
+reasoning_enabled = True
 
 records = load_records(RUN)
 print(f"{gray}{len(records)} records in {RUN}{endc}")
 record = next(r for r in records if r["judge_match"] and r["reasoning_enabled"] == reasoning_enabled)
 print(f"{purple}{record['behavior_id']}{endc} reasoning={record['reasoning_enabled']} match={record['judge_match']}")
-text = tokenizer.apply_chat_template(record_to_conv(record), tokenize=False)
+record_conv = record_to_conv(record)
+text = tokenizer.apply_chat_template(record_conv, tokenize=False)
 assert isinstance(text, str)
 ids = tokenizer(text, return_tensors="pt").input_ids.to(model.device)
 print(underline_stoks(ids, tokenizer))
 acts = collect_acts(model, ids, cfg.layers)
+user_prompt_ids = t.Tensor(tokenizer.apply_chat_template(record_conv[:-1])["input_ids"]).int()
+seq_len = ids.shape[1]
+user_prompt_len = user_prompt_ids.shape[0]
 
 #%% ask about a span
 
-start, end = 0, ids.shape[1]
-question = "What does the model believe about who it is and who it is talking to?"
+start, end = 0, user_prompt_len+20
+print(tokenizer.decode(ids[0, start:end]))
+# question = "What does the model believe about who it is and who it is talking to?"
+# question = "Will the model admit to being a human?"
+question = "How will the model respond to the user?"
 for a in ask(model, tokenizer, cfg, span_vecs(acts, cfg.layers, start, end), question)[0]:
     print(f"{cyan}{a}{endc}")
+    print(gray, "="*20, endc)
 
 #%% sweep: the same question at every position of the span
 
@@ -43,3 +51,5 @@ for i, ans in zip(range(start, end), answers):
 #%% viewer (picks runs/records from results/ itself)
 
 serve(model, tokenizer, cfg)
+
+#%%
