@@ -23,6 +23,8 @@ jlens = load_jlens("qwen3.6-27b/j-lens/lens.pt", device=model.device)
 print(jlens.keys())
 print(jlens["provenance"])
 
+vocab_labels, _ = cluster_vocab(model)  # k-means over the mean-centered unembedding, for the j-lens cluster readout
+
 #%% pick a replay record
 
 load_default_replay_record = True
@@ -50,10 +52,11 @@ if run_record:
     del logits
     tec()
 
-#%% j-lens readout at a position
+#%% j-lens cluster readout at a position: top tokens overall, then the top unembedding clusters and their tokens
 
 show_jlens = True
 if show_jlens:
+<<<<<<< Updated upstream
     jlens_readout(
         cache=cache,
         layers=range(30, 60),
@@ -63,6 +66,15 @@ if show_jlens:
         k=15,
         input_src=conv_toks
     )
+||||||| Stash base
+    # seq_pos = conv_toks.shape[0] - 1
+    seq_pos = 106 # ' lol'
+    jlens_readout(cache, range(30, 60, 2), seq_pos, model, jlens, k=15, input_src=conv_toks)
+=======
+    # seq_pos = conv_toks.shape[0] - 1
+    seq_pos = 106 # ' lol'
+    jlens_cluster_readout(cache, range(30, 60, 2), seq_pos, model, jlens, vocab_labels, n_clusters=11, n_rows=15, input_src=conv_toks)
+>>>>>>> Stashed changes
 
 #%% template-lens readout at a position
 
