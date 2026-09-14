@@ -39,28 +39,31 @@ if load_default_replay_record:
     conv = record_to_conv(record)
     print(gray, json.dumps(record, indent=2), endc)
 
-#%% j-lens and tlens at a position in the record
+#%% run the record through the model
 
-check_lenses = False
-if check_lenses:
+run_record = False
+if run_record:
     conv_toks = t.tensor(to_ids(conv, tokenizer), device=device)
-    conv_stoks = to_str_toks(conv_toks, tokenizer)
     print(underline_stoks(conv_toks, tokenizer))
     print(pink, conv_toks.shape, endc)
     logits, cache = model.run_with_cache(conv_toks.reshape(1, -1), names_filter=lambda n: n.endswith("hook_resid_pre"), stop_at_layer=model.cfg.n_layers)
     del logits
-
     tec()
 
+#%% j-lens readout at a position
+
+show_jlens = False
+if show_jlens:
     # seq_pos = conv_toks.shape[0] - 1
     seq_pos = 106 # ' lol'
-    targ_stok = repr(tokenizer.decode(conv_toks[seq_pos]))
-    for layer in range(30, 60, 2):
-        h = cache[f"blocks.{layer}.hook_resid_pre"][0, seq_pos]
-        top_toks_table(get_lens_logits(h, layer, model, jlens), tokenizer, k=15, title=f"[L{layer}] j-lens on {targ_stok}")
-        top_templates_table(get_tlens_scores(h, layer, tlens), tlens["words"], k=15, title=f"[L{layer}] tlens on {targ_stok}")
+    jlens_readout(cache, range(30, 60, 2), seq_pos, model, jlens, k=15, input_src=conv_toks)
 
-    tec()
+#%% template-lens readout at a position
+
+show_tlens = False
+if show_tlens:
+    seq_pos = 106 # ' lol'
+    tlens_readout(cache, range(30, 60, 2), seq_pos, tlens, k=15, input_src=conv_toks, tokenizer=tokenizer)
 
 #%% lens viewer (picks runs/records from results/ itself)
 
