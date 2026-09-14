@@ -1,5 +1,4 @@
-"""Project helpers: replay records under results/, OpenRouter sampling and rubric judging, the j-lens steering-vector helper,
-and the token-level CoT resampling pipeline. Model loading, local sampling, lens loading and readouts come from mechtools."""
+"""Project helpers: replay records under results/, OpenRouter sampling and rubric judging, and the token-level CoT resampling pipeline. Model loading, local sampling, lens loading and readouts come from mechtools."""
 
 # pyright: basic
 
@@ -14,13 +13,9 @@ from typing import Any, Callable
 
 import httpx
 import matplotlib.pyplot as plt
-import torch as t
-from torch import Tensor
-
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from tqdm import tqdm
-from transformer_lens.model_bridge import TransformerBridge
 from transformers import AutoTokenizer
 
 import weirdchat as wc
@@ -163,19 +158,6 @@ async def probe_reasoning(cfg: dict) -> None:
     if probe is None or (not probe["reasoning_tokens"] and probe["reasoning"] is None):
         raise SystemExit(f"{red}provider does not appear to support reasoning for {cfg['model']}{endc}")
     print(f"  provider={cyan}{probe['provider']}{endc} served_model={probe['served_model']} reasoning_tokens={probe['reasoning_tokens']} trace_returned={probe['reasoning'] is not None}")
-
-# ============================= j-lens steering directions ============================= #
-# Unlike mechtools.get_jlens_token_vec, these fold in ln_final's gain, so the dot product with the residual is the j-lens logit up to the rms scaling.
-
-def gather_steer_lens_vecs(toks: list[str], layer: int, model: TransformerBridge, jlens: dict) -> Tensor:
-    """[n_toks, d_model] directions at `layer` whose dot products with the residual are the j-lens logits of `toks` (up to ln_final's rms scaling). Empty toks gives [0, d_model]."""
-    ids = [model.tokenizer.encode(tok, add_special_tokens=False) for tok in toks]
-    assert all(len(i) == 1 for i in ids), f"multi-token entries: {[(tok, i) for tok, i in zip(toks, ids) if len(i) != 1]}"
-    unembed_dirs = model.ln_final.weight * model.W_U[:, [i[0] for i in ids]].T
-    return unembed_dirs @ jlens["J"][layer].to(unembed_dirs.device, unembed_dirs.dtype)
-
-def get_lens_vec(token: str, layer: int, model: TransformerBridge, lens: dict) -> Tensor:
-    return gather_steer_lens_vecs([token], layer, model, lens)[0]
 
 # ============================= CoT resampling ============================= #
 # Cut a judged record's trace (cfg.cut="reasoning", a reasoning-on record) or visible response (cfg.cut="response", a
