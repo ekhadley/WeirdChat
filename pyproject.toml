@@ -67,4 +67,4 @@ line_length = 100
 known_first_party = ["weirdchat"]
 
 [tool.uv.sources]
-mechtools = { git = "https://github.com/ekhadley/mechtools" }
+mechtools = { git = "ssh://git@github.com/ekhadley/mechtools" }

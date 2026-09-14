@@ -1,6 +1,7 @@
 #!./.venv/bin/python
 #%%
 from mechtools import *
+from mechtools.colors import *
 from utils import *
 from lens import serve
 
@@ -24,7 +25,7 @@ print(jlens["provenance"])
 
 #%% pick a replay record
 
-load_default_replay_record = False
+load_default_replay_record = True
 if load_default_replay_record:
     RUN = "qwen3.6-27b/q36_27b_z"
     # target_behavior_id = "claims-called-911"
@@ -41,10 +42,9 @@ if load_default_replay_record:
 
 #%% run the record through the model
 
-run_record = False
+run_record = True
 if run_record:
     conv_toks = t.tensor(to_ids(conv, tokenizer), device=device)
-    print(underline_stoks(conv_toks, tokenizer))
     print(pink, conv_toks.shape, endc)
     logits, cache = model.run_with_cache(conv_toks.reshape(1, -1), names_filter=lambda n: n.endswith("hook_resid_pre"), stop_at_layer=model.cfg.n_layers)
     del logits
@@ -52,11 +52,17 @@ if run_record:
 
 #%% j-lens readout at a position
 
-show_jlens = False
+show_jlens = True
 if show_jlens:
-    # seq_pos = conv_toks.shape[0] - 1
-    seq_pos = 106 # ' lol'
-    jlens_readout(cache, range(30, 60, 2), seq_pos, model, jlens, k=15, input_src=conv_toks)
+    jlens_readout(
+        cache=cache,
+        layers=range(30, 60),
+        pos=116,
+        model=model,
+        jlens=jlens,
+        k=15,
+        input_src=conv_toks
+    )
 
 #%% template-lens readout at a position
 
