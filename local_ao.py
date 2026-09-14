@@ -1,5 +1,6 @@
 #!./.venv/bin/python
 #%%
+from mechtools import *
 from utils import *
 from ao import AOConfig, load_ao, collect_acts, span_vecs, sweep_vecs, ask, serve
 

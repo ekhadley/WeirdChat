@@ -3,7 +3,7 @@ name = "weirdchat"
 version = "0.1.0"
 description = "Client code for working with the WeirdChat dataset of unexpected AI behaviors, with reference judge and reproduction of examples."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [{ name = "Transluce", email = "info@transluce.org" }]
 dependencies = [
@@ -16,6 +16,7 @@ dependencies = [
     "ipywidgets>=8.1.8",
     "markdown>=3.10.3",
     "matplotlib>=3.11.1",
+    "mechtools",
     "openai>=1.60",
     "peft>=0.20.0",
     "pyarrow>=17",
@@ -64,3 +65,6 @@ line_length = 100
 # Pin the classification so isort is deterministic regardless of whether weirdchat is installed
 # (auto-detection otherwise differs between a dev machine and CI, causing spurious re-sorts).
 known_first_party = ["weirdchat"]
+
+[tool.uv.sources]
+mechtools = { git = "https://github.com/ekhadley/mechtools" }

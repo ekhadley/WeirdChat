@@ -1,5 +1,6 @@
 #!./.venv/bin/python
 #%%
+from mechtools import *
 from utils import *
 from lens import serve
 
@@ -42,7 +43,7 @@ if load_default_replay_record:
 
 check_tlens = False
 if check_tlens:
-    conv_toks = tokenizer.apply_chat_template(conv, return_tensors="pt", return_dict=False, tokenize=True).to(device).squeeze()
+    conv_toks = t.tensor(to_ids(conv, tokenizer), device=device)
     conv_stoks = to_str_toks(conv_toks, tokenizer)
     print(underline_stoks(conv_toks, tokenizer))
     print(pink, conv_toks.shape, endc)
@@ -72,14 +73,7 @@ test_completion = False
 if test_completion:
     n_new_toks = 64
 
-    prompt_toks = tokenizer.apply_chat_template(
-        conv[:-1],
-        add_generation_prompt=True,
-        return_tensors="pt",
-        return_dict=False,
-        tokenize=True,
-        enable_thinking=record["reasoning_enabled"]
-    ).to(device)
+    prompt_toks = apply_chat_template(tokenizer, conv[:-1], enable_thinking=record["reasoning_enabled"])[0].to(device)
     print(tokenizer.decode(prompt_toks[0]))
     gen_toks = []
     for tok in stream_toks(model, prompt_toks, new_toks=n_new_toks):
@@ -99,14 +93,7 @@ if test_steered_completion:
     steer_vec = get_lens_vec(steer_template, steer_layer, model, jlens).to(device, t.bfloat16)
     steer_vec = steer_vec / steer_vec.norm()
 
-    prompt_toks = tokenizer.apply_chat_template(
-        conv[:-1],
-        add_generation_prompt=True,
-        return_tensors="pt",
-        return_dict=False,
-        tokenize=True,
-        enable_thinking=record["reasoning_enabled"]
-    ).to(device)
+    prompt_toks = apply_chat_template(tokenizer, conv[:-1], enable_thinking=record["reasoning_enabled"])[0].to(device)
 
     def steering_hook(resid, hook):
         return resid + steer_coef * steer_vec
@@ -131,9 +118,9 @@ if test_set_completion:
 
     base = load_records("qwen3.6-27b/q36_27b_z")[1455]  # the dating prompt, denying-ai-identity, reasoning off
     messages = record_messages(base)
-    prompt_toks = tokenizer.apply_chat_template([{"role": m.role, "content": m.content} for m in messages], add_generation_prompt=True, return_tensors="pt", return_dict=False, tokenize=True, enable_thinking=False).to(device)
+    prompt_toks = apply_chat_template(tokenizer, [{"role": m.role, "content": m.content} for m in messages], enable_thinking=False)[0].to(device)
 
-    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
+    dirs_by_layer = {L: t.cat([get_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
     print(tokenizer.decode(prompt_toks[0]))
     gen_toks = []
     with model.hooks(fwd_hooks=set_hooks(dirs_by_layer, set_target)):
@@ -159,14 +146,7 @@ if get_baseline_elicitation_rate:
 
     judge = judge_for(behavior_id)
 
-    prompt_toks = tokenizer.apply_chat_template(
-        [{"role": m.role, "content": m.content} for m in prompt.messages],
-        add_generation_prompt=True,
-        return_tensors="pt",
-        return_dict=False,
-        tokenize=True,
-        enable_thinking=enable_thinking
-    ).to(device)
+    prompt_toks = apply_chat_template(tokenizer, [{"role": m.role, "content": m.content} for m in prompt.messages], enable_thinking=enable_thinking)[0].to(device)
     print(tokenizer.decode(prompt_toks[0]))
     responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
     tec()
@@ -198,17 +178,10 @@ if run_lens_set:
     base = load_records("qwen3.6-27b/q36_27b_z")[1455]  # the dating prompt, denying-ai-identity, reasoning off
     messages = record_messages(base)
     judge = judge_for(base["behavior_id"])
-    prompt_toks = tokenizer.apply_chat_template(
-        [{"role": m.role, "content": m.content} for m in messages],
-        add_generation_prompt=True,
-        return_tensors="pt",
-        return_dict=False,
-        tokenize=True,
-        enable_thinking=False
-    ).to(device)
+    prompt_toks = apply_chat_template(tokenizer, [{"role": m.role, "content": m.content} for m in messages], enable_thinking=False)[0].to(device)
 
     model.reset_hooks()
-    dirs_by_layer = {L: t.cat([gather_steer_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
+    dirs_by_layer = {L: t.cat([get_template_vecs(set_templates, L, tlens).to(device, t.bfloat16), gather_steer_lens_vecs(set_lens_toks, L, model, jlens).to(device, t.bfloat16)]) for L in set_layers}
     with model.hooks(fwd_hooks=set_hooks(dirs_by_layer, set_target)):
         responses = [tokenizer.decode(row) for row in sample_rolling(model, prompt_toks, n_samples, batch_size, max_new_toks)]
     tec()

@@ -13,6 +13,7 @@ import torch as t
 from flask import Flask, request, send_file
 from werkzeug.serving import make_server
 
+from mechtools import normed
 from utils import load_records, record_to_conv
 
 PORT = 7860
@@ -20,10 +21,6 @@ PORT = 7860
 app = Flask(__name__)
 state: dict = {}
 _records: dict[str, list[dict]] = {}
-
-
-def normed(x: t.Tensor) -> t.Tensor:
-    return t.nn.functional.normalize(x, dim=-1)
 
 
 def records(run: str) -> list[dict]:

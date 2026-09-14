@@ -1,61 +1,32 @@
-"""Local-model interp helpers: TransformerBridge sampling, j-lens / template-lens loading and scoring,
-record -> chat-template conversion for the replay runs under results/, and the token-level CoT resampling pipeline."""
+"""Project helpers: replay records under results/, OpenRouter sampling and rubric judging, the j-lens steering-vector helper,
+and the token-level CoT resampling pipeline. Model loading, local sampling, lens loading and readouts come from mechtools."""
 
 # pyright: basic
 
 import asyncio
 import glob
 import json
-import math
 import os
 import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Callable
-import functools
 
 import httpx
 import matplotlib.pyplot as plt
 import torch as t
 from torch import Tensor
 
-import IPython
 from dotenv import load_dotenv
-from huggingface_hub import hf_hub_download
 from openai import AsyncOpenAI
-from safetensors import safe_open
-from tabulate import tabulate
 from tqdm import tqdm
 from transformer_lens.model_bridge import TransformerBridge
 from transformers import AutoTokenizer
-from transformers.cache_utils import DynamicLayer
 
 import weirdchat as wc
 from weirdchat.types import Message
-
-# IPYTHON = IPython.get_ipython()
-# if IPYTHON is not None:
-#     IPYTHON.run_line_magic("load_ext", "autoreload")
-#     IPYTHON.run_line_magic("autoreload", "2")
-
-purple = '\x1b[38;2;255;0;255m'
-blue = '\x1b[38;2;0;0;255m'
-cyan = '\x1b[38;2;0;255;255m'
-lime = '\x1b[38;2;0;255;0m'
-yellow = '\x1b[38;2;255;255;0m'
-red = '\x1b[38;2;255;0;0m'
-pink = '\x1b[38;2;255;51;204m'
-orange = '\x1b[38;2;255;51;0m'
-green = '\x1b[38;2;5;170;20m'
-gray = '\x1b[38;2;127;127;127m'
-bold = '\033[1m'
-underline = '\033[4m'
-endc = '\033[0m'
-
-LENS_REPO = "camilablank/workspace-lenses"
-
-
-def tec(): t.cuda.empty_cache()
+from mechtools import wilson
+from mechtools.colors import *
 
 # ============================= replay records ============================= #
 
@@ -193,97 +164,8 @@ async def probe_reasoning(cfg: dict) -> None:
         raise SystemExit(f"{red}provider does not appear to support reasoning for {cfg['model']}{endc}")
     print(f"  provider={cyan}{probe['provider']}{endc} served_model={probe['served_model']} reasoning_tokens={probe['reasoning_tokens']} trace_returned={probe['reasoning'] is not None}")
 
-# ============================= local sampling ============================= #
-
-def stream_toks(model: TransformerBridge, inputs: Tensor, new_toks: int = 512):
-    toks = inputs
-    past = None
-    for _ in range(new_toks):
-        logits, past = model(toks, return_type="logits_and_cache", past_key_values=past, use_cache=True)
-        probs = t.softmax(logits[0, -1], dim=-1)
-        toks = t.multinomial(probs, num_samples=1).unsqueeze(0)
-        if toks.item() == model.tokenizer.eos_token_id:
-            break
-        yield toks.item()
-
-def sample_batch(model: TransformerBridge, prompt_toks: Tensor, n: int, new_toks: int = 512) -> list[list[int]]:
-    """n independent temperature-1 samples from one prompt [1, seq], generated as a batch; each row is returned cut before its first eos."""
-    eos = model.tokenizer.eos_token_id
-    toks = prompt_toks.repeat(n, 1)
-    past = None
-    gen = t.zeros(n, 0, dtype=t.long, device=prompt_toks.device)
-    alive = t.ones(n, dtype=t.bool, device=prompt_toks.device)
-    lengths = t.full((n,), new_toks, device=prompt_toks.device)
-    for step in tqdm(range(new_toks), desc="sampling", ascii=" >="):
-        logits, past = model(toks, return_type="logits_and_cache", past_key_values=past, use_cache=True)
-        toks = t.multinomial(t.softmax(logits[:, -1].float(), dim=-1), num_samples=1)
-        gen = t.cat([gen, toks], dim=1)
-        ended = alive & (toks.squeeze(1) == eos)
-        lengths[ended] = step
-        alive &= ~ended
-        if not alive.any(): break
-    return [gen[i, :lengths[i]].tolist() for i in range(n)]
-
-def sample_rolling(model: TransformerBridge, prompt_toks: Tensor, n: int, batch_size: int, new_toks: int) -> list[list[int]]:
-    """n independent temperature-1 samples from one prompt [1, seq] as a rolling batch: a row that ends (eos or new_toks) is restarted in place from the prompt while samples remain to start, else dropped from the batch. A restarted row is left-padded to the batch's cache length, with the mask and position ids covering only its real tokens. Each sample is cut before its first eos."""
-    eos, last, plen = model.tokenizer.eos_token_id, prompt_toks[0, -1], prompt_toks.shape[1] - 1
-    B = min(batch_size, n)
-    _, cache = model(prompt_toks[:, :-1].repeat(B, 1), return_type="logits_and_cache", use_cache=True)
-    template = [(l.keys[0].clone(), l.values[0].clone()) if isinstance(l, DynamicLayer) else (l.conv_states[0][0].clone(), l.recurrent_states[0][0].clone()) for l in cache.layers]
-    toks = last.repeat(B, 1)  # next token fed to each row
-    n_real = t.full((B,), plen, device=prompt_toks.device)  # unpadded cache entries per row, also the next token's position
-    gen = [[] for _ in range(B)]
-    out, n_started = [], B
-    bar = tqdm(total=n, desc="sampling", ascii=" >=")
-    while gen:
-        S = cache.get_seq_length()
-        mask = (t.arange(S + 1, device=toks.device) >= (S - n_real)[:, None]).long()
-        logits, cache = model(toks, return_type="logits_and_cache", past_key_values=cache, use_cache=True, attention_mask=mask, position_ids=n_real[:, None])
-        toks = t.multinomial(t.softmax(logits[:, -1].float(), dim=-1), num_samples=1)
-        n_real += 1
-        for row, tok in zip(gen, toks.squeeze(1).tolist()):
-            row.append(tok)
-        keep = []
-        for i, row in enumerate(gen):
-            if row[-1] != eos and len(row) < new_toks:
-                keep.append(i)
-                continue
-            out.append(row[:-1] if row[-1] == eos else row)
-            bar.update()
-            if n_started == n: continue
-            n_started += 1
-            keep.append(i)
-            for layer, (a, b) in zip(cache.layers, template):  # entries left of the prompt are stale but masked
-                if isinstance(layer, DynamicLayer): layer.keys[i, :, S + 1 - plen:], layer.values[i, :, S + 1 - plen:] = a, b
-                else: layer.conv_states[0][i], layer.recurrent_states[0][i] = a, b
-            toks[i], n_real[i], gen[i] = last, plen, []
-        if len(keep) < len(gen):
-            cache.reorder_cache(t.tensor(keep, device=toks.device))
-            toks, n_real, gen = toks[keep], n_real[keep], [gen[i] for i in keep]
-        tec()
-    return out
-
-# ============================= lenses ============================= #
-
-def load_jlens(path: str, device: str = "cpu") -> dict:
-    return t.load(hf_hub_download(repo_id=LENS_REPO, filename=path), map_location=device, weights_only=False)
-
-def load_tlens(path: str, device: str = "cpu") -> dict:
-    local_path = hf_hub_download(repo_id=LENS_REPO, filename=path)
-    words_path = hf_hub_download(repo_id=LENS_REPO, filename=path.replace("templates", "template_words").replace(".safetensors", ".txt"))
-    with safe_open(local_path, framework="pt", device=device) as f:
-        tlens = {"meta": f.metadata(), "templates": f.get_tensor("templates"), "word_ids": f.get_tensor("word_ids")}
-    tlens["words"] = [line.split("\t", 1)[1] for line in open(words_path).read().splitlines()]
-    return tlens
-
-
-def jlens_transport(acts: Tensor, lens: dict, layer: int) -> Tensor:
-    return lens["J"][layer].to(t.bfloat16) @ acts
-
-
-def get_lens_logits(h: Tensor, layer: int, model: TransformerBridge, lens: dict) -> Tensor:
-    return model.unembed(model.ln_final(jlens_transport(h, lens, layer)))
-
+# ============================= j-lens steering directions ============================= #
+# Unlike mechtools.get_jlens_token_vec, these fold in ln_final's gain, so the dot product with the residual is the j-lens logit up to the rms scaling.
 
 def gather_steer_lens_vecs(toks: list[str], layer: int, model: TransformerBridge, jlens: dict) -> Tensor:
     """[n_toks, d_model] directions at `layer` whose dot products with the residual are the j-lens logits of `toks` (up to ln_final's rms scaling). Empty toks gives [0, d_model]."""
@@ -294,96 +176,6 @@ def gather_steer_lens_vecs(toks: list[str], layer: int, model: TransformerBridge
 
 def get_lens_vec(token: str, layer: int, model: TransformerBridge, lens: dict) -> Tensor:
     return gather_steer_lens_vecs([token], layer, model, lens)[0]
-
-
-def get_template_idx(template: str, lens: dict) -> int:
-    return lens["words"].index(template)
-
-def gather_steer_template_vecs(templates: list[str], layer: int, tlens: dict) -> Tensor:
-    """[n_templates, d_model] template-lens directions at `layer`. Empty templates gives [0, d_model]."""
-    return tlens["templates"][layer, [get_template_idx(templ, tlens) for templ in templates]]
-
-def get_template_vec(template: str, layer: int, lens: dict) -> Tensor:
-    return gather_steer_template_vecs([template], layer, lens)[0]
-
-def scale_hook(resid: Tensor, hook, Q: Tensor, factor: float) -> Tensor:
-    return resid + (factor - 1) * ((resid @ Q) @ Q.T)
-
-def scale_hooks(dirs_by_layer: dict[int, Tensor], factor: float) -> list[tuple[str, Callable]]:
-    """fwd_hooks that rescale the residual's projection onto span(dirs) by `factor` at each layer's hook_resid_pre (0 ablates). Directions are orthonormalized so correlated ones aren't double counted."""
-    return [(f"blocks.{layer}.hook_resid_pre", functools.partial(scale_hook, Q=t.linalg.qr(dirs.T.float())[0].to(dirs.dtype), factor=factor)) for layer, dirs in dirs_by_layer.items()]
-
-def set_hook(resid: Tensor, hook, Q: Tensor, v: Tensor) -> Tensor:
-    return resid - (resid @ Q) @ Q.T + v
-
-def set_hooks(dirs_by_layer: dict[int, Tensor], target: float) -> list[tuple[str, Callable]]:
-    """fwd_hooks that replace the residual's projection onto span(dirs) with the in-span vector whose dot product with each unit direction is `target`, at each layer's hook_resid_pre."""
-    hooks = []
-    for layer, dirs in dirs_by_layer.items():
-        D = (dirs / dirs.norm(dim=-1, keepdim=True)).float()
-        Q = t.linalg.qr(D.T)[0]
-        v = t.linalg.pinv(D) @ t.full((D.shape[0],), target, device=D.device)
-        hooks.append((f"blocks.{layer}.hook_resid_pre", functools.partial(set_hook, Q=Q.to(dirs.dtype), v=v.to(dirs.dtype))))
-    return hooks
-
-def print_templates(tlens: dict, contains: str | None = None):
-    for i, word in enumerate(tlens["words"]):
-        if contains is None or contains.lower() in word.lower():
-            print(f"{i}\t{word!r}")
-
-
-def get_tlens_scores(h: Tensor, layer: int, tlens: dict) -> Tensor:
-    return t.cosine_similarity(tlens["templates"][layer].to(h.device), h, dim=-1)
-
-# ============================= printing ============================= #
-
-def to_str_toks(inp: str | Tensor, tokenizer) -> list[str]:
-    return [tokenizer.decode(tok) for tok in (tokenizer.encode(inp) if isinstance(inp, str) else inp.squeeze())]
-
-
-def underline_stoks(toks: Tensor, tokenizer) -> str:
-    stoks = to_str_toks(toks, tokenizer)
-    return "".join(f"{underline if i % 2 else endc}{s}" for i, s in enumerate(stoks)) + endc
-
-
-def print_titled_table(table_str: str, title: str | None = None):
-    if title is None:
-        print(table_str)
-        return
-    lines = table_str.splitlines()
-    inner = len(lines[0]) - 2
-    print(f"╭{'─' * inner}╮")
-    print(f"│{bold}{title.center(inner)}{endc}│")
-    print(f"├{'─' * inner}┤")
-    print("\n".join(lines[1:]))
-
-
-def top_toks_table(logits: Tensor, tokenizer, k: int = 10, show_negative: bool = False, title: str | None = None):
-    logits = logits.flatten().float()
-    probs = logits.softmax(-1)
-    top = logits.topk(k)
-    headers = ["Tok", "Logit", "Prob"]
-    cols = [[repr(tokenizer.decode([i])) for i in top.indices.tolist()], top.values.tolist(), probs[top.indices].tolist()]
-    if show_negative:
-        bot = logits.topk(k, largest=False)
-        headers = [f"Top {h}" for h in headers] + [f"Bot {h}" for h in headers]
-        cols += [[repr(tokenizer.decode([i])) for i in bot.indices.tolist()], bot.values.tolist(), probs[bot.indices].tolist()]
-    data = [(i, *(col[i] for col in cols)) for i in range(k)]
-    print_titled_table(tabulate(data, headers=["Idx"] + headers, tablefmt="rounded_outline"), title)
-
-
-def top_templates_table(scores: Tensor, words: list[str], k: int = 10, show_negative: bool = False, title: str | None = None):
-    scores = scores.flatten().float()
-    top = scores.topk(k)
-    headers = ["Template", "Cos"]
-    cols = [[repr(words[i]) for i in top.indices.tolist()], top.values.tolist()]
-    if show_negative:
-        bot = scores.topk(k, largest=False)
-        headers = [f"Top {h}" for h in headers] + [f"Bot {h}" for h in headers]
-        cols += [[repr(words[i]) for i in bot.indices.tolist()], bot.values.tolist()]
-    data = [(i, *(col[i] for col in cols)) for i in range(k)]
-    print_titled_table(tabulate(data, headers=["Idx"] + headers, tablefmt="rounded_outline"), title)
-
 
 # ============================= CoT resampling ============================= #
 # Cut a judged record's trace (cfg.cut="reasoning", a reasoning-on record) or visible response (cfg.cut="response", a
@@ -416,14 +208,6 @@ class ResampleConfig:
     def out_dir(self) -> str:
         return os.path.join("results", self.run.split("/")[0], "resample", f"{self.run.split('/')[1]}_{self.idx}{self.tag}")
 
-
-def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
-    if n == 0:
-        return (0.0, 1.0)
-    p, d = k / n, 1 + z**2 / n
-    c = (p + z**2 / (2 * n)) / d
-    h = z * math.sqrt(p * (1 - p) / n + z**2 / (4 * n**2)) / d
-    return (min(max(c - h, 0.0), p), max(min(c + h, 1.0), p))  # clamped: at k=0 or k=n rounding can put a bound a float epsilon outside [0, 1] or on the wrong side of p
 
 
 async def _complete(client: httpx.AsyncClient, sem: asyncio.Semaphore, cfg: ResampleConfig, headers: dict, prompt: str) -> dict:

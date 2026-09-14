@@ -21,7 +21,8 @@ from werkzeug.serving import make_server
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerBase
 
-from utils import load_records, record_to_conv, tec
+from mechtools import tec
+from utils import load_records, record_to_conv
 
 PORT = 7862
 INJECT_LAYER = 1
