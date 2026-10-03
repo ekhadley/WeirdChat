@@ -20,7 +20,7 @@ cfg = ResampleConfig(
     # run="deepseek-v4-flash/dv4f_full_elo", idx=26573,
     model="deepseek/deepseek-v4-flash", provider="deepinfra", tokenizer="deepseek-ai/DeepSeek-V4-Flash",
     render_prompt=lambda tok, msgs: encode_messages([{"role": m.role, "content": m.content} for m in msgs], "thinking"),  # ends with <｜Assistant｜><think>
-    S=50, stride=1, tag="_s50",
+    S=200, stride=1, tag="_s200", concurrency=48,  # the adaptive_resampling reference: S=200 at every position
 )
 
 if __name__ == "__main__":
