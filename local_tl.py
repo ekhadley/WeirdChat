@@ -56,7 +56,6 @@ if run_record:
 
 show_jlens = True
 if show_jlens:
-<<<<<<< Updated upstream
     jlens_readout(
         cache=cache,
         layers=range(30, 60),
@@ -66,15 +65,6 @@ if show_jlens:
         k=15,
         input_src=conv_toks
     )
-||||||| Stash base
-    # seq_pos = conv_toks.shape[0] - 1
-    seq_pos = 106 # ' lol'
-    jlens_readout(cache, range(30, 60, 2), seq_pos, model, jlens, k=15, input_src=conv_toks)
-=======
-    # seq_pos = conv_toks.shape[0] - 1
-    seq_pos = 106 # ' lol'
-    jlens_cluster_readout(cache, range(30, 60, 2), seq_pos, model, jlens, vocab_labels, n_clusters=11, n_rows=15, input_src=conv_toks)
->>>>>>> Stashed changes
 
 #%% template-lens readout at a position
 
