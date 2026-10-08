@@ -2,7 +2,7 @@
 
 This is a fork of Transluce's WeirdChat client library. The upstream README is preserved below. Everything above it is about the fork.
 
-[📄 Full report](https://ekhadley.net/matsmatsmats) · Data viewer with every sample, ablation, and resampling curve: [ekhadley.net/matsmatsmats](https://ekhadley.net/matsmatsmats)
+[📄 Full report](https://ekhadley.net/matsmatsmats)
 
 ## What this fork is for
 
